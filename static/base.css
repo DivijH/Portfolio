@@ -3,6 +3,8 @@ body {
     font-family: 'Dongle', sans-serif;
     font-size: 1.7rem;
     height: 90%;
+    background-color: black;
+    color: white;
 }
 
 html {
@@ -11,7 +13,6 @@ html {
 
 #container {
     min-height: 100%;
-    min-width: 100%;
 }
 
 ul {
@@ -19,7 +20,8 @@ ul {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #333;
+    background-color: black;
+    background-image: linear-gradient(#363636, black);
     position: fixed;
     top: 0;
     width: 100%;
@@ -28,6 +30,38 @@ ul {
 
 li {
     float: right;
+}
+
+#me {
+    float: left;
+}
+
+#burger {
+    display: none;
+    float: right;
+    color: white;
+}
+
+i {
+    margin-top: 1rem;
+    margin-right: 1rem;
+}
+
+#hidden-list {
+    margin-top: 4.2rem;
+}
+
+.hidden-links {
+    display: none;
+    width: 100%;
+    background-color: #111111;
+    text-decoration: none;
+    color: white;
+    padding-left: 1rem;
+}
+
+.hidden-links:hover {
+    background-color: #111;
 }
 
 li a {
@@ -47,12 +81,23 @@ li a:hover {
 }
 
 footer {
-    background: linear-gradient(#585555, #333);
+    background-color: black;
+    background-image: linear-gradient(black, #363636);
     padding: 0.5rem;
     height: 10%;
 }
 
 footer p {
     text-align: center;
-    color: #dbcbcb;
+    color: #41ff80;
+}
+
+@media only screen and (max-width: 600px) {
+    .burger-links {
+        display: none;
+    }
+
+    #burger {
+        display: block;
+    }
 }

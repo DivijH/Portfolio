@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Contact Me!
+{% endblock %}
+
+{% block css %}
+    <link rel='stylesheet' href='{% static "portfolio/contact.css" %}'>
+{% endblock %}
+
+{% block content %}
+    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+    <div id='content'>
+        <h1>Contact Me</h1>
+        <div id='links'>
+            <div id='contact'>
+                <div class='contact-row'>
+                    <img src='{% static "portfolio/images/location.png" %}' id="location-img">
+                    <p>Arizona, US</p>
+                </div>
+                <div class="contact-row">
+                    <img src='{% static "portfolio/images/mail.png" %}'>
+                    <p>divij.handa.work@gmail.com</p>    
+                </div>
+
+                <a href="https://www.linkedin.com/in/divij-handa-504b9766/" target="_blank"><img class='social' src="{% static 'portfolio/images/linkedin.png' %}" alt="Divij's LinkedIn Profile"></a>
+                <a href="https://github.com/DivijH" target="_blank"><img class='social' src="{% static 'portfolio/images/github.png' %}" alt="Divij's Github Profile"></a>
+                <a href="https://www.instagram.com/divij.handa/" target="_blank"><img class='social' src="{% static 'portfolio/images/instagram.png' %}" alt="Divij's Instagram Profile"></a>
+            </div>
+    
+            <form action='mailto:divij.handa.work@gmail.com' method="post" enctype="text/plain" id='mail-form'>
+                {% csrf_token %}
+                <input type='text' name="Name" placeholder='Name' required class="user-input">
+                <input type='email' name='Email' placeholder="Email" required class="user-input">
+                <input type="text" name='Subject' placeholder="Subject" required class="user-input">
+                <textarea name="Message" placeholder="Message" required class="user-input" id="contact-message"></textarea>
+                <input type="submit" value="Submit" id='btn'>
+            </form>
+        </div>
+    </div>
+{% endblock %}

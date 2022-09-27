@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {{ project.tile }}
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'portfolio/project.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div id='content'>
+        <h1>
+            {{ project.title }}
+        </h1>
+        
+        <div id="project-links">
+            {% for link in project.links.all %}
+                <a target="_blank" href="{{ link.link_url }}">{{ link.link_desc }}</a>
+            {% endfor %}
+        </div>
+
+        <p id='description'>
+            {{ project.content }}
+        </p>
+    </div>
+{% endblock %}

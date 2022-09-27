@@ -1,0 +1,38 @@
+#error-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 85vh;
+    flex-direction: column;
+}
+
+h1 {
+    margin-bottom: 0;
+}
+
+#title-404 {
+    margin-bottom: 2rem;
+}
+
+#go-home {
+    color: white;
+    text-decoration: none;
+    background-image: linear-gradient(to right, rgb(34, 187, 34), rgb(159, 255, 180), rgb(34, 187, 34));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-animation 500s linear infinite;
+}
+
+@keyframes rainbow-animation {
+    to {
+        background-position: 4500vh;
+    }
+}
+
+#go-home:hover {
+    transform: scale(1.1);
+}
+
+#push {
+    height: 0;
+}

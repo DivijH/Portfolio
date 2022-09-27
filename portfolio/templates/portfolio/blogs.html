@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    My Blogs
+{% endblock %}
+
+{% block css %}
+    <link rel='stylesheet' href="{% static 'portfolio/blogs.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div id='content'>
+        <h1>My Blogs</h1>
+        <p>I have written some technical blogs. Click on the blog below to view the full article.</p>
+        {% for blog in blogs %}
+            <a target="_blank" href="{{ blog.link }}" class='blog'>
+                <h3>{{ blog.title }}</h3>
+                <p>{{ blog.content }}</p>
+                <div class="blog-tag">Tags: {{ blog.tags }}</div>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}
