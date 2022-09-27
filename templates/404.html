@@ -1,9 +1,17 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
     Not Found!
 {% endblock %}
 
+{% block css %}
+    <link rel="stylesheet" href="{% static '404.css' %}">
+{% endblock %}
+
 {% block content %}
-    <h1>This page doesn't exist</h1>
+    <div id="error-page">
+        <h1 id="title-404">This page doesn't exist :(</h1>
+        <a href="/" id="go-home">Go home?</a>
+    </div>
 {% endblock %}

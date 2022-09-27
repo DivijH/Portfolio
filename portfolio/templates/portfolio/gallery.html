@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Gallery
+{% endblock %}
+
+{% block css %}
+    <link rel='stylesheet' href='{% static "portfolio/gallery.css" %}'>
+{% endblock %}
+
+{% block content %}
+    <h1 id="title">Some renders of the 3D models that I have worked on</h1>
+    <p>Click the image to view in better resolution</p>
+    <div id="image-grid">
+        {% if images %}
+            {% for image in images %}
+                <img class="gallery-image" src="https://drive.google.com/uc?id={{ image.google_drive_code }}" alt="{{ image.description }}">
+            {% endfor %}
+        {% else %}
+            <div id="construction">
+                <h1 id="construction-content">Working on some amazing renders to display!</h1>
+            </div>
+        {% endif %}
+    </div>
+
+    
+
+    <div class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-image">
+        <p class="caption"></p>
+    </div>
+
+    <script src="{% static 'portfolio/js/modal.js' %}"></script>
+{% endblock %}

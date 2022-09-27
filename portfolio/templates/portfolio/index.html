@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Divij Handa
+{% endblock %}
+
+{% block css %}
+    <link rel='stylesheet' href='{% static "portfolio/index.css" %}'>
+{% endblock %}
+
+{% block content %}
+    <br>
+    <canvas id="matrixBackground"></canvas>
+
+    <div id='intro'>
+        <div id='text-info'>
+            <div id="intro-title">
+                <div class="title-word">
+                    <h1 class='title'>H</h1>
+                    <h1 class='title'>i</h1>
+                    <h1 class='title'>!</h1>
+                </div>
+                <div class="space"></div>
+                <div class="title-word">
+                    <h1 class='title'>I</h1>
+                    <h1 class='title'>'</h1>
+                    <h1 class='title'>m</h1>    
+                </div>
+                <div class="space"></div>
+                <div class="title-word">
+                    <h1 class='title'>D</h1>
+                    <h1 class='title'>i</h1>
+                    <h1 class='title'>v</h1>
+                    <h1 class='title'>i</h1>
+                    <h1 class='title'>j</h1>
+                </div>
+                <div class="space"></div>
+                <div class="title-word">
+                    <h1 class='title'>H</h1>
+                    <h1 class='title'>a</h1>
+                    <h1 class='title'>n</h1>
+                    <h1 class='title'>d</h1>
+                    <h1 class='title'>a</h1>
+                    <h1 class='title'>.</h1>
+                </div>
+            </div>
+            <p>Student at Arizona State Univeristy, Tempe pursuing MS in Computer Science.<br/>Passionate about
+                <span class="word"></span>|
+            </p>
+            <form target="_blank" method="get" action="{% static 'portfolio/files/Resume_DivijHanda.pdf' %}">
+                <button id='resume' type='submit'><img src='{% static "portfolio/images/download.png" %}'>Resume</button>
+            </form>
+        </div>
+    </div>
+
+    <div class='container'>
+        <h2>Technical Skills</h2>
+        
+        <p>HTML,CSS,JS</p>
+        <div class='total-skill' id="html-skill">
+            <div class='one-skill' id='html'>90%</div>
+        </div>
+
+        <p>Python</p>
+        <div class='total-skill'>
+            <div class='one-skill' id='python'>90%</div>
+        </div>
+
+        <p>Django</p>
+        <div class='total-skill'>
+            <div class='one-skill' id='django'>70%</div>
+        </div>
+        
+        <p>Machine Learning</p>
+        <div class='total-skill'>
+            <div class='one-skill' id='ml'>70%</div>
+        </div>
+        
+        <p>Git</p>
+        <div class='total-skill'>
+            <div class='one-skill' id='git'>80%</div>
+        </div>
+        
+        <p>Game Development (Unity 3D)</p>
+        <div class='total-skill'>
+            <div class='one-skill' id='game'>40%</div>
+        </div>
+        
+        <br>
+    </div>
+
+    <div class="container">
+        <h2 id='work-title'>Work Experience</h2>
+        
+        {% for experience in experiences %}
+            <div class='job'>
+                <div class='job-head'>
+                    <p class='job-name'>{{ experience.company_name }}</p>
+                    {% if experience.end_date %}
+                        <p class='job-date'>({{ experience.start_date }} - {{ experience.end_date }})</p>
+                    {% else %}
+                        <p class='job-date'>({{ experience.start_date }})</p>
+                    {% endif %}
+                </div>
+                <p class='job-title'>{{ experience.job_title }}</p>
+                <p class='job-desc'>{{ experience.job_description }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script src="{% static 'portfolio/js/matrix.js' %}"></script>
+    <script src="{% static 'portfolio/js/textLoop.js' %}"></script>
+{% endblock %}

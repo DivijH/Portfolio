@@ -1,0 +1,232 @@
+#matrixBackground {
+    background-color: black;
+    position: absolute;
+    top: 4rem;
+    left: 0;
+    overflow: hidden;
+    object-position: bottom;
+    z-index: -1;
+}
+
+#intro {
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#text-info {
+    margin-left: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+#text-info p {
+    font-size: 2rem;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+#intro-title {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.title-word {
+    display: flex;
+    flex-direction: row;
+}
+
+.space {
+    width: 1.2rem;
+}
+
+.title {
+    font-size: 4rem;
+    margin: 0;
+    padding: 0;
+    text-shadow: 0px 2px 2px #00ff0d, 0px -2px 2px #00ff0d, 2px 0px 2px #00ff0d, -2px 0px 2px #00ff0d;
+    font-family: monospace;
+    margin-bottom: 0.2rem;
+}
+
+.title:hover {
+    animation-name: title-animation;
+    animation-duration: 1s;
+}
+
+@keyframes title-animation {
+    10% {
+        color: #5eff00;
+        text-shadow: 0px 2px 2px blue, 0px -2px 2px blue, 2px 0px 2px blue, -2px 0px 2px blue;
+        font-size: 4.2rem;
+        margin: 0;
+        transform: translate(0, -0.4rem);
+    }
+}
+
+#text-info p {
+    font-size: 2.5rem;
+    background-color: black;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+p span {
+    color: #00ff0d;
+}
+
+#resume {
+    background-color: #272727;
+    padding: 0.5rem;
+    font: inherit;
+    border-radius: 10px;
+    color: white;
+    border: 1px solid #b4b4b4;
+}
+
+#resume img {
+    width: 2rem;
+    height: 2rem;
+    vertical-align: middle;
+}
+
+#resume:hover {
+    background-color: #665f5f;
+    cursor: pointer;
+}
+
+.container {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    border-style: groove;
+    border-radius: 12px;
+    width: 50%;
+    margin: auto;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    transform: translateY(-4rem);
+    background-color: #161616;
+}
+
+.container h2 {
+    font-size: 3rem;
+    margin: 1.5rem;
+}
+
+.container p {
+    margin: 0;
+    margin-top: 0.5rem;
+    padding: 0;
+}
+
+.total-skill {
+    box-sizing: border-box;
+    background-color: #ddd;
+    border: 10px black;
+    width: 70%;
+    border-radius: 6px;
+}
+
+.one-skill {
+    text-align: right;
+    border-radius: 6px;
+    color: white;
+    background-color: green;
+}
+
+#html {
+    width: 90%;
+}
+
+#django {
+    width: 70%;
+}
+
+#ml {
+    width: 70%;
+}
+
+#git {
+    width: 80%;
+}
+
+#python {
+    width: 90%;
+}
+
+#game {
+    width: 40%;
+}
+
+#work-title {
+    margin-bottom: 1rem;
+}
+
+.job {
+    width: 60%;
+    border-bottom: 1px solid #333;
+}
+
+.container :last-of-type {
+    border-bottom: none;
+}
+
+.job-head {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.job p {
+    margin: 0;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.job-name {
+    font-weight: bold;
+    color: #00910c;
+}
+
+.job-date {
+    color: #6bcc88;
+}
+
+.job-title {
+    font-style: italic;
+    color: #9c9c9c;
+}
+
+.job-desc {
+    /*  */
+}
+
+#push {
+    height: 0;
+}
+
+@media screen and (max-width: 500px) {
+    .title {
+        font-size: 3.2rem;
+    }
+
+    #text-info p {
+        font-size: 2rem;
+    }
+
+    p span {
+        font-size: 2rem;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .container {
+        transform: none;
+        width: 90%;
+    }
+}

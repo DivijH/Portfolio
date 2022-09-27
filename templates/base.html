@@ -10,27 +10,38 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dongle&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel='stylesheet' href='{% static "base.css" %}'>
     {% block css %}{% endblock %}
 </head>
-<style>
-    {% block inline-css %}{% endblock %}
-</style>
+
 <body>
     <div id='container'>
         <ul>
-            <li><a href='/contact'>Contact</a></li>
-            <li><a href='/blogs'>Blogs</a></li>
-            <li><a href='/projects'>Projects</a></li>
-            <li><a href='/'>Home</a></li>
+            <li id='me'><a href='/'>Divij Handa</a></li>
+            <a id="burger" href="javascript:void(0);" class="icon" onclick="burgerToggle()">
+                <i class="fa fa-bars"></i>
+            </a>
+            <li class="burger-links"><a href='/contact'>Contact</a></li>
+            <li class="burger-links"><a href='/gallery'>Gallery</a></li>
+            <li class="burger-links"><a href='/blogs'>Blogs</a></li>
+            <li class="burger-links"><a href='/projects'>Projects</a></li>
         </ul>
         <br>
+        <ul id="hidden-list">
+            <a class='hidden-links' href="/projects">Projects</a>
+            <a class='hidden-links' href="/blogs">Blogs</a>
+            <a class='hidden-links' href="/gallery">Gallery</a>
+            <a class='hidden-links' href="/contact">Contact</a>
+        </ul>
         {% block content %}
         {% endblock %}
         <div id='push'></div>
     </div>
     <footer>
-        <p>Author: Divij Handa</p>
+        <p>Developer: Divij Handa</p>
     </footer>
+
+    <script src="{% static 'base.js' %}"></script>
 </body>
 </html>

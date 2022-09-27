@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    My Projects
+{% endblock %}
+
+{% block css %}
+    <link rel='stylesheet' href="{% static 'portfolio/projects.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div id='content'>
+        {% if search %}
+            <h1>My Projects ({{ search }})</h1>
+        {% else %}
+            <h1>My Projects</h1>
+        {% endif %}
+        <p>Some of the projects that I have worked on. Click on the project below to see the details.</p>
+        <div id="tag-list">
+            {% for tag in tags %}
+                <a href="/projects?tag={{ tag.tag_name }}">{{ tag.tag_name }}</a>
+            {% endfor %}
+            <a href="/projects/" id="close-tags">&#10006;</a>
+        </div>
+        {% for project in projects %}
+            <a href="{{ project.slug }}" class='project'>
+                <h3>{{ project.title }}</h3>
+                <p>{{ project.summary }}</p>
+                <div class="project-tags">
+                    Tags: &nbsp;
+                    {% for tag in project.tags.all %}
+                        {{ tag }} &nbsp;
+                    {% endfor %}
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}
