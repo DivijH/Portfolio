@@ -1,0 +1,54 @@
+{% comment %}Interactive LLM-agent lifecycle stepper. Expects `agent_pipeline`
+(list of 4 stages). Click/keyboard selects a stage; its papers show in the panel
+below. Without JS, every stage's papers are shown (progressive enhancement).{% endcomment %}
+<section class="section tight lifecycle">
+    <div class="section-head reveal">
+        <p class="eyebrow">Core research · LLM Agents</p>
+        <h2>The LLM agent lifecycle</h2>
+        <p>My work spans the full stack of building capable, reliable LLM agents — from
+            <strong>generating</strong> the data that probes them, to <strong>training</strong>,
+            to <strong>test-time</strong> methods, to <strong>evaluation &amp; safety</strong>.
+            Select a stage to explore the papers.</p>
+    </div>
+
+    <div class="lc reveal">
+        <div class="lc-rail" role="tablist" aria-label="Agent lifecycle stages">
+            {% for stage in agent_pipeline %}
+            <button class="lc-node{% if forloop.first %} active{% endif %}" type="button" role="tab"
+                    id="lc-tab-{{ stage.key }}" aria-controls="lc-panel-{{ stage.key }}"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                    tabindex="{% if forloop.first %}0{% else %}-1{% endif %}">
+                <span class="lc-dot" aria-hidden="true">{{ stage.icon }}</span>
+                <span class="lc-step">Stage {{ forloop.counter|stringformat:"02d" }}</span>
+                <span class="lc-label">{{ stage.label }}</span>
+                <span class="lc-count">{{ stage.papers|length }}</span>
+            </button>
+            {% endfor %}
+        </div>
+
+        <div class="lc-panels">
+            {% for stage in agent_pipeline %}
+            <div class="lc-panel{% if forloop.first %} active{% endif %}" role="tabpanel"
+                 id="lc-panel-{{ stage.key }}" aria-labelledby="lc-tab-{{ stage.key }}">
+                <div class="lc-panel-head">
+                    <span class="lc-panel-icon" aria-hidden="true">{{ stage.icon }}</span>
+                    <div>
+                        <h3 class="lc-panel-title">{{ stage.label }}</h3>
+                        <p class="lc-panel-blurb">{{ stage.blurb }}</p>
+                    </div>
+                </div>
+                <div class="lc-papers">
+                    {% for pub in stage.papers %}
+                        <a class="lc-paper" href="{{ pub.get_absolute_url }}">
+                            <span class="lc-paper-title">{{ pub.title }}</span>
+                            <span class="lc-paper-venue">{% if pub.is_published %}{{ pub.venue }}{% else %}Preprint{% endif %}</span>
+                        </a>
+                    {% empty %}
+                        <p class="ls-empty">Coming soon.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

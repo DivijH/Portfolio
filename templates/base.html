@@ -1,47 +1,101 @@
 {% load static %}
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Divij Handa{% endblock %}</title>
+    <title>{% block title %}{{ profile.name|default:"Divij Handa" }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ profile.name|default:'Divij Handa' }} — {{ profile.role|default:'LLM Researcher' }}.{% endblock %}">
+
+    <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+    {# Social sharing — Twitter falls back to og: tags, so no twitter:title/description needed. #}
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="{{ profile.name|default:'Divij Handa' }}">
+    <meta property="og:title" content="{% block og_title %}{{ profile.name|default:'Divij Handa' }} — {{ profile.role|default:'LLM Researcher' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ profile.bio|default:'LLM Agents researcher — reasoning, planning, evaluation and safety.' }}{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'og-image.png' %}{% endblock %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dongle&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel='stylesheet' href='{% static "base.css" %}'>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'base.css' %}">
     {% block css %}{% endblock %}
+
+    <script>
+        // Set theme before paint to avoid a flash of the wrong theme.
+        (function () {
+            // Mark that JS is on so reveal animations only hide content when they can be shown again.
+            document.documentElement.classList.add('js');
+            try {
+                var override = new URLSearchParams(window.location.search).get('theme');
+                var saved = localStorage.getItem('theme');
+                var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+                document.documentElement.setAttribute('data-theme', override || saved || (prefersLight ? 'light' : 'dark'));
+            } catch (e) {}
+        })();
+    </script>
 </head>
 
 <body>
-    <div id='container'>
-        <ul>
-            <li id='me'><a href='/'>Divij Handa</a></li>
-            <a id="burger" href="javascript:void(0);" class="icon" onclick="burgerToggle()">
-                <i class="fa fa-bars"></i>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="nav" id="nav">
+        <div class="nav-inner">
+            <a class="brand" href="{% url 'portfolio:index' %}">
+                <span class="brand-mark" aria-hidden="true"></span>
+                <span class="brand-text">
+                    <span class="brand-name">{{ profile.name|default:"Divij Handa" }}</span>
+                    <span class="brand-role">{{ profile.role|default:"LLM Researcher" }}</span>
+                </span>
             </a>
-            <li class="burger-links"><a href='/contact'>Contact</a></li>
-            <li class="burger-links"><a href='/gallery'>Gallery</a></li>
-            <li class="burger-links"><a href='/blogs'>Blogs</a></li>
-            <li class="burger-links"><a href='/projects'>Projects</a></li>
-        </ul>
-        <br>
-        <ul id="hidden-list">
-            <a class='hidden-links' href="/projects">Projects</a>
-            <a class='hidden-links' href="/blogs">Blogs</a>
-            <a class='hidden-links' href="/gallery">Gallery</a>
-            <a class='hidden-links' href="/contact">Contact</a>
-        </ul>
-        {% block content %}
-        {% endblock %}
-        <div id='push'></div>
-    </div>
-    <footer>
-        <p>Developer: Divij Handa</p>
+
+            <nav class="nav-links" id="nav-links" aria-label="Primary">
+                <a href="{% url 'portfolio:index' %}" {% if request.resolver_match.url_name == 'index' %}aria-current="page"{% endif %}>Home</a>
+                <a href="{% url 'portfolio:research' %}" {% if request.resolver_match.url_name == 'research' %}aria-current="page"{% endif %}>Research</a>
+                <a href="{% url 'portfolio:publications' %}" {% if request.resolver_match.url_name == 'publications' or request.resolver_match.url_name == 'publication' %}aria-current="page"{% endif %}>Publications</a>
+                <a href="{% url 'portfolio:contact' %}" {% if request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %}>Contact</a>
+            </nav>
+
+            <div class="nav-actions">
+                <a class="btn btn-primary btn-sm" href="{{ profile.cv_url }}" target="_blank" rel="noopener">CV</a>
+                <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle light/dark">
+                    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+                <button class="hamburger" id="hamburger" type="button" aria-label="Menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="brand-name">{{ profile.name|default:"Divij Handa" }}</span>
+                <span class="footer-tag">{{ profile.role|default:"LLM Researcher" }}{% if profile.location %} · {{ profile.location }}{% endif %}</span>
+            </div>
+            <div class="footer-socials">
+                {% for label, url, icon in profile.socials %}
+                    <a href="{{ url }}" target="_blank" rel="noopener" aria-label="{{ label }}" title="{{ label }}">{% include 'portfolio/_social_icon.html' with icon=icon %}{{ label }}</a>
+                {% endfor %}
+            </div>
+            <div class="footer-note">© <span id="year">2026</span> {{ profile.name|default:"Divij Handa" }} · built with Django</div>
+        </div>
     </footer>
 
     <script src="{% static 'base.js' %}"></script>
+    {% block js %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Research — {{ profile.name|default:"Divij Handa" }}{% endblock %}
+
+{% block content %}
+<header class="page-head">
+    <p class="eyebrow">Research</p>
+    <h1>Research</h1>
+    <p>{% if profile.bio %}{{ profile.bio }}{% else %}I study large language models — how they reason, what they represent, and how to evaluate and align them. Below are the threads I'm currently pulling on.{% endif %}</p>
+</header>
+
+{% if agent_pipeline %}
+    {% include 'portfolio/_agent_pipeline.html' %}
+{% endif %}
+
+<section class="section tight">
+    <div class="section-head reveal">
+        <p class="eyebrow">Themes</p>
+        <h2>Research areas</h2>
+    </div>
+    {% if research_areas %}
+    <div class="area-grid">
+        {% for area in research_areas %}
+        <div class="card area-card reveal" data-delay="{{ forloop.counter0 }}">
+            {% if area.icon %}<span class="area-icon">{{ area.icon }}</span>{% endif %}
+            <h3>{{ area.title }}</h3>
+            <p>{{ area.description|default:area.summary }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty-state">Research areas coming soon — add them from the admin panel.</div>
+    {% endif %}
+</section>
+
+{% if publications %}
+<section class="section tight">
+    <div class="section-head reveal head-row">
+        <div>
+            <p class="eyebrow">Output</p>
+            <h2>Recent publications</h2>
+        </div>
+        <a class="section-link" href="{% url 'portfolio:publications' %}">All publications →</a>
+    </div>
+    {% for pub in publications|slice:":5" %}
+        {% include 'portfolio/_publication.html' with pub=pub index=forloop.counter %}
+    {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

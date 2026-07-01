@@ -1,0 +1,39 @@
+{% load portfolio_extras %}
+<article class="pub reveal">
+    <div class="pub-index">{{ index|stringformat:"02d" }}</div>
+    <div class="pub-body">
+        <h3>{% if pub.slug %}<a class="pub-title-link" href="{% url 'portfolio:publication' pub.slug %}">{{ pub.title }}</a>{% else %}{{ pub.title }}{% endif %}{% if pub.award %}<span class="badge">{{ pub.award }}</span>{% endif %}</h3>
+        <p class="authors">{{ pub.authors|highlight_author:profile.name }}</p>
+        <p class="venue">
+            {% if pub.is_published %}
+                <span class="venue-pill"><span class="tick">✓</span> Accepted at {{ pub.venue }}</span>
+                <span class="kind">{{ pub.get_kind_display }}</span>
+            {% else %}
+                <span class="venue-pill preprint">Preprint</span>
+                {% if pub.arxiv_url %}<span class="kind">arXiv</span>{% endif %}
+            {% endif %}
+        </p>
+        {% if pub.tldr %}<p class="pub-tldr"><span class="tldr-label">TL;DR</span> {{ pub.tldr }}</p>{% endif %}
+        <div class="pub-links">
+            {% for label, url in pub.links %}
+                <a href="{{ url }}" target="_blank" rel="noopener">{{ label }} ↗</a>
+            {% endfor %}
+            {% if pub.abstract %}
+                <button class="pub-toggle" data-target="abs-{{ pub.id }}" data-open="Hide abstract" data-closed="Abstract">Abstract</button>
+            {% endif %}
+            {% if pub.bibtex %}
+                <button class="pub-toggle" data-target="bib-{{ pub.id }}" data-open="Hide BibTeX" data-closed="BibTeX">BibTeX</button>
+            {% endif %}
+            {% for tag in pub.tags.all %}<span class="chip">{{ tag }}</span>{% endfor %}
+        </div>
+        {% if pub.abstract %}
+            <div class="pub-abstract" id="abs-{{ pub.id }}">{{ pub.abstract }}</div>
+        {% endif %}
+        {% if pub.bibtex %}
+            <div class="pub-abstract" id="bib-{{ pub.id }}">
+                <button class="pub-toggle" data-copy="bibtex-{{ pub.id }}" style="float:right">copy</button>
+                <pre id="bibtex-{{ pub.id }}">{{ pub.bibtex }}</pre>
+            </div>
+        {% endif %}
+    </div>
+</article>

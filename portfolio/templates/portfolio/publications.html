@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Publications — {{ profile.name|default:"Divij Handa" }}{% endblock %}
+
+{% block content %}
+<header class="page-head">
+    <p class="eyebrow">Research output</p>
+    <h1>Publications</h1>
+    <p>Peer-reviewed papers, workshop contributions and preprints. {{ total }} total — click <em>Abstract</em> or <em>BibTeX</em> on any entry to expand.</p>
+</header>
+
+<section class="section" style="padding-top:1.5rem">
+    {% if tags %}
+    <div class="filterbar reveal">
+        <a href="{% url 'portfolio:publications' %}" class="{% if not active_tag %}active{% endif %}">All</a>
+        {% for tag in tags %}
+            <a href="?tag={{ tag.tag_name|urlencode }}" class="{% if active_tag == tag.tag_name %}active{% endif %}">{{ tag.tag_name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% regroup publications by year as year_list %}
+    {% for year in year_list %}
+        <div class="year-group">
+            <p class="year-label reveal">{{ year.grouper }}</p>
+            {% for pub in year.list %}
+                {% include 'portfolio/_publication.html' with pub=pub index=forloop.counter %}
+            {% endfor %}
+        </div>
+    {% empty %}
+        <div class="empty-state">No publications yet{% if active_tag %} tagged “{{ active_tag }}”{% endif %}. Add them from the admin panel.</div>
+    {% endfor %}
+</section>
+{% endblock %}

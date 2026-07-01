@@ -10,22 +10,59 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import json
+import os
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load local secrets/config from config.json (gitignored) if present.
+_config = {}
+_config_path = BASE_DIR / 'config.json'
+if _config_path.exists():
+    with open(_config_path) as _f:
+        _config = json.load(_f)
+
+
+def get_config(key, default=None):
+    """Read a setting from the environment first, then config.json, then default."""
+    return os.environ.get(key, _config.get(key, default))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ''
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = str(get_config('DEBUG', 'False')).lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['127.0.0.1']
+# SECURITY WARNING: keep the secret key used in production secret!
+# The insecure dev fallback is allowed only while DEBUG is on; a real deployment
+# (DEBUG=False) must provide SECRET_KEY via the environment or config.json.
+SECRET_KEY = get_config('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-dev-key-only-for-local-use'
+    else:
+        raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is False.')
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.divijhanda.in']
+CSRF_TRUSTED_ORIGINS = ['https://divijhanda.in', 'https://www.divijhanda.in']
+
+# Production hardening — applied only for real deployments (DEBUG off), so local
+# development over plain HTTP is unaffected.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    # Trust the X-Forwarded-Proto header set by the reverse proxy / load balancer.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # Application definition
@@ -37,11 +74,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     'portfolio',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise serves static files in production without a separate web server.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,6 +105,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'portfolio.context_processors.site',
             ],
         },
     },
@@ -122,6 +163,44 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# In production, WhiteNoise compresses and hashes static files (cache-busting).
+# In development the default storage avoids the collectstatic/manifest step.
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': (
+            'whitenoise.storage.CompressedManifestStaticFilesStorage'
+            if not DEBUG else
+            'django.contrib.staticfiles.storage.StaticFilesStorage'
+        ),
+    },
+}
+
+# Media files (admin-uploaded resume, images)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# ---------------------------------------------------------------------------
+# Email — contact-form notifications
+# ---------------------------------------------------------------------------
+# The contact form always saves messages to the database (visible in the admin).
+# It additionally emails CONTACT_EMAIL when SMTP is configured; otherwise mail is
+# printed to the console, so nothing is required for local development.
+CONTACT_EMAIL = get_config('CONTACT_EMAIL', 'dhanda@asu.edu')
+DEFAULT_FROM_EMAIL = get_config('DEFAULT_FROM_EMAIL', 'no-reply@divijhanda.in')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+if get_config('EMAIL_HOST'):
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = get_config('EMAIL_HOST')
+    EMAIL_PORT = int(get_config('EMAIL_PORT', 587))
+    EMAIL_HOST_USER = get_config('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = get_config('EMAIL_HOST_PASSWORD', '')
+    EMAIL_USE_TLS = str(get_config('EMAIL_USE_TLS', 'True')).lower() in ('1', 'true', 'yes')
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

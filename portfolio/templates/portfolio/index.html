@@ -1,114 +1,97 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}
-    Divij Handa
-{% endblock %}
-
-{% block css %}
-    <link rel='stylesheet' href='{% static "portfolio/index.css" %}'>
-{% endblock %}
+{% block title %}{{ profile.name|default:"Divij Handa" }} — {{ profile.role|default:"LLM Researcher" }}{% endblock %}
 
 {% block content %}
-    <br>
-    <canvas id="matrixBackground"></canvas>
+{{ profile.stream_phrases|json_script:"stream-phrases" }}
 
-    <div id='intro'>
-        <div id='text-info'>
-            <div id="intro-title">
-                <div class="title-word">
-                    <h1 class='title'>H</h1>
-                    <h1 class='title'>i</h1>
-                    <h1 class='title'>!</h1>
-                </div>
-                <div class="space"></div>
-                <div class="title-word">
-                    <h1 class='title'>I</h1>
-                    <h1 class='title'>'</h1>
-                    <h1 class='title'>m</h1>    
-                </div>
-                <div class="space"></div>
-                <div class="title-word">
-                    <h1 class='title'>D</h1>
-                    <h1 class='title'>i</h1>
-                    <h1 class='title'>v</h1>
-                    <h1 class='title'>i</h1>
-                    <h1 class='title'>j</h1>
-                </div>
-                <div class="space"></div>
-                <div class="title-word">
-                    <h1 class='title'>H</h1>
-                    <h1 class='title'>a</h1>
-                    <h1 class='title'>n</h1>
-                    <h1 class='title'>d</h1>
-                    <h1 class='title'>a</h1>
-                    <h1 class='title'>.</h1>
-                </div>
-            </div>
-            <p>Student at Arizona State Univeristy, Tempe pursuing MS in Computer Science.<br/>Passionate about
-                <span class="word"></span>|
-            </p>
-            <form target="_blank" method="get" action="{% static 'portfolio/files/Resume_DivijHanda.pdf' %}">
-                <button id='resume' type='submit'><img src='{% static "portfolio/images/download.png" %}'>Resume</button>
-            </form>
+<section class="hero">
+    <canvas id="neural-canvas"></canvas>
+    <div class="hero-fade"></div>
+    <div class="hero-inner">
+        <span class="hero-status"><span class="dot"></span> PhD researcher · LLM Agents · open to research collaborations &amp; internships</span>
+        <h1>Hi, I'm <span class="accent">{{ profile.name|default:"Divij Handa" }}</span>.</h1>
+        <p class="hero-stream">
+            <span class="prompt">research_focus&nbsp;▸</span>
+            <span id="token-stream"></span><span class="cursor">.</span>
+        </p>
+        <p class="hero-sub">
+            {% if profile.bio %}{{ profile.bio }}{% else %}{{ profile.role|default:"LLM Researcher" }}{% if profile.location %} based in {{ profile.location }}{% endif %}. I work on language models — how they reason, what they know, and how to make them more reliable.{% endif %}
+        </p>
+        <div class="hero-cta">
+            <a class="btn btn-primary" href="{{ profile.cv_url }}" target="_blank" rel="noopener">Download CV</a>
+            <a class="btn btn-ghost" href="{% url 'portfolio:publications' %}">View publications</a>
+        </div>
+        <div class="socials">
+            {% for label, url, icon in profile.socials %}
+                <a class="social-link" href="{{ url }}" target="_blank" rel="noopener">{% include 'portfolio/_social_icon.html' with icon=icon %}{{ label }}</a>
+            {% endfor %}
         </div>
     </div>
+    <div class="scroll-cue"><span>scroll</span><span class="line"></span></div>
+</section>
 
-    <div class='container'>
-        <h2>Technical Skills</h2>
-        
-        <p>HTML,CSS,JS</p>
-        <div class='total-skill' id="html-skill">
-            <div class='one-skill' id='html'>90%</div>
-        </div>
+{% if agent_pipeline %}
+    {% include 'portfolio/_agent_pipeline.html' %}
+{% endif %}
 
-        <p>Python</p>
-        <div class='total-skill'>
-            <div class='one-skill' id='python'>90%</div>
+{% if publications %}
+<section class="section tight">
+    <div class="section-head reveal head-row">
+        <div>
+            <p class="eyebrow">Selected work</p>
+            <h2>Featured publications</h2>
         </div>
-
-        <p>Django</p>
-        <div class='total-skill'>
-            <div class='one-skill' id='django'>70%</div>
-        </div>
-        
-        <p>Machine Learning</p>
-        <div class='total-skill'>
-            <div class='one-skill' id='ml'>70%</div>
-        </div>
-        
-        <p>Git</p>
-        <div class='total-skill'>
-            <div class='one-skill' id='git'>80%</div>
-        </div>
-        
-        <p>Game Development (Unity 3D)</p>
-        <div class='total-skill'>
-            <div class='one-skill' id='game'>40%</div>
-        </div>
-        
-        <br>
+        <a class="section-link" href="{% url 'portfolio:publications' %}">All publications →</a>
     </div>
+    {% for pub in publications %}
+        {% include 'portfolio/_publication.html' with pub=pub index=forloop.counter %}
+    {% endfor %}
+</section>
+{% endif %}
 
-    <div class="container">
-        <h2 id='work-title'>Work Experience</h2>
-        
-        {% for experience in experiences %}
-            <div class='job'>
-                <div class='job-head'>
-                    <p class='job-name'>{{ experience.company_name }}</p>
-                    {% if experience.end_date %}
-                        <p class='job-date'>({{ experience.start_date }} - {{ experience.end_date }})</p>
-                    {% else %}
-                        <p class='job-date'>({{ experience.start_date }})</p>
-                    {% endif %}
-                </div>
-                <p class='job-title'>{{ experience.job_title }}</p>
-                <p class='job-desc'>{{ experience.job_description }}</p>
+{% if news %}
+<section class="section tight">
+    <div class="section-head reveal">
+        <p class="eyebrow">Updates</p>
+        <h2>News</h2>
+    </div>
+    <div class="news-list reveal">
+        {% for item in news %}
+        <div class="news-item">
+            <div class="news-date">{{ item.date|date:"M Y" }}</div>
+            <div class="news-content">
+                {% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.content }}</a>{% else %}{{ item.content }}{% endif %}
             </div>
+        </div>
         {% endfor %}
     </div>
+</section>
+{% endif %}
 
-    <script src="{% static 'portfolio/js/matrix.js' %}"></script>
-    <script src="{% static 'portfolio/js/textLoop.js' %}"></script>
+{% if experiences %}
+<section class="section tight">
+    <div class="section-head reveal">
+        <p class="eyebrow">Path</p>
+        <h2>Experience</h2>
+    </div>
+    <div class="timeline reveal">
+        {% for exp in experiences %}
+        <div class="exp">
+            <div class="exp-head">
+                <span class="exp-company">{{ exp.company_name }}</span>
+                <span class="exp-date">{{ exp.start_date }}{% if exp.end_date %} – {{ exp.end_date }}{% endif %}</span>
+            </div>
+            <div class="exp-title">{{ exp.job_title }}{% if exp.location %} · {{ exp.location }}{% endif %}</div>
+            <p class="exp-desc">{{ exp.job_description }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'portfolio/js/hero.js' %}"></script>
 {% endblock %}

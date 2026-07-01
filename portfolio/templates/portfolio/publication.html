@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load portfolio_extras %}
+
+{% block title %}{{ publication.title }} — {{ profile.name|default:"Divij Handa" }}{% endblock %}
+{% block meta_description %}{{ publication.title }} — {{ publication.venue }} ({{ publication.year }}).{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ publication.title }}{% endblock %}
+{% block og_description %}{% if publication.tldr %}{{ publication.tldr }}{% else %}{{ publication.venue }} ({{ publication.year }}). {{ publication.abstract|truncatewords:30 }}{% endif %}{% endblock %}
+{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% if publication.image %}{{ publication.image.url }}{% else %}{% static 'og-image.png' %}{% endif %}{% endblock %}
+
+{% block content %}
+<header class="page-head">
+    <a class="section-link" href="{% url 'portfolio:publications' %}">← All publications</a>
+    <h1>{{ publication.title }}</h1>
+    <p class="pub-detail-authors">{{ publication.authors|highlight_author:profile.name }}</p>
+    <div class="pub-detail-meta">
+        {% if publication.is_published %}
+            <span class="venue-pill"><span class="tick">✓</span> Accepted at {{ publication.venue }}</span>
+        {% else %}
+            <span class="venue-pill preprint">Preprint</span>
+        {% endif %}
+        <span class="chip">{{ publication.year }}</span>
+        {% if publication.stage %}<span class="chip accent">{{ publication.get_stage_display }}</span>{% endif %}
+        {% if publication.award %}<span class="badge">{{ publication.award }}</span>{% endif %}
+    </div>
+</header>
+
+<section class="section" style="padding-top:1.5rem">
+    {% if publication.image %}
+        <img class="reveal" src="{{ publication.image.url }}" alt="{{ publication.title }}"
+             style="border-radius:var(--radius); border:1px solid var(--border); margin-bottom:2rem;">
+    {% endif %}
+
+    {% if publication.links %}
+    <div class="detail-links reveal">
+        {% for label, url in publication.links %}
+            <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="{{ url }}">{{ label }} ↗</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if publication.abstract %}
+    <div class="reveal">
+        <h2 class="detail-h">Abstract</h2>
+        <p class="prose">{{ publication.abstract }}</p>
+    </div>
+    {% endif %}
+
+    {% if publication.bibtex %}
+    <div class="reveal">
+        <h2 class="detail-h">BibTeX <button class="pub-toggle" data-copy="bibtex-detail">copy</button></h2>
+        <pre id="bibtex-detail" class="bibtex-block">{{ publication.bibtex }}</pre>
+    </div>
+    {% endif %}
+
+    {% if publication.tags.all %}
+    <div class="detail-tags reveal">
+        {% for tag in publication.tags.all %}<span class="chip">{{ tag }}</span>{% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

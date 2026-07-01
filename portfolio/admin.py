@@ -2,12 +2,73 @@ from django.contrib import admin
 
 from . import models
 
-# Register your models here.
+
+@admin.register(models.Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ('Identity', {'fields': ('name', 'role', 'tagline', 'location', 'email', 'avatar', 'resume')}),
+        ('About', {'fields': ('bio',)}),
+        ('Links', {'fields': ('scholar_url', 'github_url', 'linkedin_url', 'twitter_url',
+                              'huggingface_url', 'orcid_url', 'instagram_url')}),
+    )
+
+    def has_add_permission(self, request):
+        # Singleton: only allow the one row.
+        return not models.Profile.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
-admin.site.register(models.Experience)
-admin.site.register(models.Blog)
-admin.site.register(models.Project)
+@admin.register(models.ResearchArea)
+class ResearchAreaAdmin(admin.ModelAdmin):
+    list_display = ('title', 'summary', 'order')
+    list_editable = ('order',)
+
+
+@admin.register(models.Publication)
+class PublicationAdmin(admin.ModelAdmin):
+    list_display = ('title', 'venue', 'year', 'kind', 'stage', 'featured')
+    list_filter = ('kind', 'stage', 'year', 'featured', 'tags')
+    list_editable = ('stage', 'featured')
+    search_fields = ('title', 'authors', 'venue')
+    filter_horizontal = ('tags',)
+    prepopulated_fields = {'slug': ('title',)}
+    fieldsets = (
+        (None, {'fields': ('title', 'slug', 'authors', 'venue', 'year', 'month', 'kind', 'stage', 'award',
+                           'tldr', 'abstract', 'image', 'tags', 'featured')}),
+        ('Links', {'fields': ('pdf_url', 'arxiv_url', 'code_url', 'project_url',
+                              'video_url', 'slides_url', 'bibtex')}),
+    )
+
+
+@admin.register(models.News)
+class NewsAdmin(admin.ModelAdmin):
+    list_display = ('date', 'content')
+    search_fields = ('content',)
+
+
+@admin.register(models.Experience)
+class ExperienceAdmin(admin.ModelAdmin):
+    list_display = ('company_name', 'job_title', 'start_date', 'end_date', 'order')
+    list_editable = ('order',)
+
+
+@admin.register(models.ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'subject', 'created_at', 'handled')
+    list_filter = ('handled', 'created_at')
+    list_editable = ('handled',)
+    search_fields = ('name', 'email', 'subject', 'message')
+    readonly_fields = ('name', 'email', 'subject', 'message', 'created_at')
+    date_hierarchy = 'created_at'
+
+    def has_add_permission(self, request):
+        return False  # messages only arrive via the contact form
+
+
 admin.site.register(models.Tag)
-admin.site.register(models.Link)
-admin.site.register(models.ImageLink)
+
+admin.site.site_header = 'Divij Handa — Portfolio admin'
+admin.site.site_title = 'Portfolio admin'
+admin.site.index_title = 'Manage site content'
