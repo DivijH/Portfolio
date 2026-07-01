@@ -67,6 +67,22 @@ class ContactMessageAdmin(admin.ModelAdmin):
         return False  # messages only arrive via the contact form
 
 
+@admin.register(models.ElectionBench)
+class ElectionBenchAdmin(admin.ModelAdmin):
+    list_display = ('title', 'status', 'results_updated_at')
+    readonly_fields = ('results', 'results_updated_at')
+    fieldsets = (
+        ('Content (edit freely)', {'fields': ('title', 'tagline', 'overview', 'methodology', 'status')}),
+        ('Streamed results (updated by the simulation)', {'fields': ('results_updated_at', 'results')}),
+    )
+
+    def has_add_permission(self, request):
+        return not models.ElectionBench.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 admin.site.register(models.Tag)
 
 admin.site.site_header = 'Divij Handa — Portfolio admin'

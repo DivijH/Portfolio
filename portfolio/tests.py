@@ -1,5 +1,7 @@
+import json
+
 from django.core import mail
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from . import models
@@ -86,3 +88,50 @@ class ContactFormTests(TestCase):
         self.assertRedirects(resp, self.url)
         self.assertEqual(models.ContactMessage.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
+
+
+@override_settings(ELECTIONBENCH_PASSWORD='pw-test', ELECTIONBENCH_TOKEN='tok-test')
+class ElectionBenchTests(TestCase):
+    url = reverse('portfolio:electionbench')
+    ingest = reverse('portfolio:electionbench_ingest')
+
+    def test_locked_and_noindex(self):
+        r = self.client.get(self.url)
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Private benchmark')
+        self.assertContains(r, 'noindex')
+
+    def test_wrong_password_stays_locked(self):
+        r = self.client.post(self.url, {'password': 'nope'})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Incorrect password')
+        self.assertNotIn('eb_ok', self.client.session)
+
+    def test_correct_password_unlocks(self):
+        r = self.client.post(self.url, {'password': 'pw-test'})
+        self.assertRedirects(r, self.url)
+        self.assertTrue(self.client.session.get('eb_ok'))
+        self.assertContains(self.client.get(self.url), 'ElectionBench')
+
+    def test_ingest_requires_token(self):
+        r = self.client.post(self.ingest, data='{}', content_type='application/json')
+        self.assertEqual(r.status_code, 403)
+
+    def test_ingest_stores_and_renders(self):
+        body = {'columns': ['Model', 'Score'], 'rows': [['GPT-4', 0.82]], 'status': 'Running 1/10'}
+        r = self.client.post(self.ingest, data=json.dumps(body), content_type='application/json',
+                             HTTP_AUTHORIZATION='Bearer tok-test')
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()['ok'])
+        bench = models.ElectionBench.load()
+        self.assertEqual(bench.results['rows'], [['GPT-4', 0.82]])
+        self.assertEqual(bench.status, 'Running 1/10')
+        s = self.client.session; s['eb_ok'] = True; s.save()
+        self.assertContains(self.client.get(self.url), 'GPT-4')
+
+    def test_ingest_get_405(self):
+        self.assertEqual(self.client.get(self.ingest).status_code, 405)
+
+    @override_settings(ELECTIONBENCH_PASSWORD='')
+    def test_404_when_unconfigured(self):
+        self.assertEqual(self.client.get(self.url).status_code, 404)

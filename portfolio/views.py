@@ -1,9 +1,14 @@
+import hmac
+import json
+
 from django.conf import settings
 from django.contrib import messages
 from django.core.mail import EmailMessage
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 
 from . import models
 
@@ -14,6 +19,7 @@ def robots_txt(request):
         'User-agent: *',
         'Allow: /',
         'Disallow: /admin/',
+        'Disallow: /electionbench',  # private, password-gated
         f'Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml',
     ]
     return HttpResponse('\n'.join(lines) + '\n', content_type='text/plain')
@@ -133,3 +139,66 @@ class ContactView(View):
 
         messages.success(request, "Thanks — your message has been sent. I'll get back to you soon.")
         return redirect('portfolio:contact')
+
+
+# ---------------------------------------------------------------------------
+# ElectionBench — private page (password gate) + streamed-results ingest
+# ---------------------------------------------------------------------------
+
+class ElectionBenchView(View):
+    """Password-gated benchmark page. Correct password sets a session flag."""
+    template = 'portfolio/electionbench.html'
+
+    def get(self, request):
+        if not settings.ELECTIONBENCH_PASSWORD:
+            raise Http404()  # feature off until a password is configured
+        if request.session.get('eb_ok'):
+            return render(request, self.template, {'bench': models.ElectionBench.load()})
+        return render(request, self.template, {'locked': True})
+
+    def post(self, request):
+        if not settings.ELECTIONBENCH_PASSWORD:
+            raise Http404()
+        entered = request.POST.get('password', '')
+        if hmac.compare_digest(entered, settings.ELECTIONBENCH_PASSWORD):
+            request.session['eb_ok'] = True
+            return redirect('portfolio:electionbench')
+        return render(request, self.template, {'locked': True, 'error': 'Incorrect password.'})
+
+
+@csrf_exempt
+def electionbench_ingest(request):
+    """Token-authenticated endpoint the simulation POSTs results to.
+
+    Auth: `Authorization: Bearer <token>` (or `X-Api-Token: <token>`).
+    Body: JSON — {"columns": [...], "rows": [[...]], "note": "...", "status": "..."}.
+    """
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    token = settings.ELECTIONBENCH_TOKEN
+    if not token:
+        raise Http404()
+
+    auth = request.headers.get('Authorization', '')
+    provided = auth[7:].strip() if auth.startswith('Bearer ') else request.headers.get('X-Api-Token', '')
+    if not provided or not hmac.compare_digest(provided, token):
+        return JsonResponse({'ok': False, 'error': 'unauthorized'}, status=403)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (ValueError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'invalid JSON'}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({'ok': False, 'error': 'expected a JSON object'}, status=400)
+
+    bench = models.ElectionBench.load()
+    bench.results = {
+        'columns': payload.get('columns', []),
+        'rows': payload.get('rows', []),
+        'note': str(payload.get('note', '')),
+    }
+    if 'status' in payload:
+        bench.status = str(payload.get('status', ''))[:160]
+    bench.results_updated_at = timezone.now()
+    bench.save()
+    return JsonResponse({'ok': True, 'updated_at': bench.results_updated_at.isoformat()})

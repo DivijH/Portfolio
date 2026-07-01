@@ -275,3 +275,43 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f'{self.name} <{self.email}> — {self.subject or "(no subject)"}'
+
+
+# ---------------------------------------------------------------------------
+# ElectionBench — private, password-gated page with streamed results
+# ---------------------------------------------------------------------------
+
+class ElectionBench(models.Model):
+    """Singleton backing the private /electionbench page.
+
+    The project content (title, overview, methodology) is edited in the admin;
+    `results` is streamed in from the simulation via the token-authenticated
+    ingest endpoint. Page access is gated by a shared password (see settings
+    ELECTIONBENCH_PASSWORD / ELECTIONBENCH_TOKEN).
+    """
+    title = models.CharField(max_length=200, default='ElectionBench')
+    tagline = models.CharField(max_length=300, blank=True,
+                               help_text='One-line description shown under the title.')
+    overview = models.TextField(blank=True, help_text='What the benchmark is and why (paragraphs).')
+    methodology = models.TextField(blank=True, help_text='How it works / experimental setup (paragraphs).')
+    status = models.CharField(max_length=160, blank=True,
+                              help_text='e.g. "Running — 42/100 scenarios". Also settable via the ingest API.')
+    results = models.JSONField(default=dict, blank=True,
+                               help_text='Streamed from the sim: {"columns": [...], "rows": [[...]], "note": "..."}.')
+    results_updated_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'ElectionBench'
+        verbose_name_plural = 'ElectionBench'
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # enforce a single row
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

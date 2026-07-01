@@ -197,6 +197,11 @@ CONTACT_EMAIL = get_config('CONTACT_EMAIL', 'dhanda@asu.edu')
 DEFAULT_FROM_EMAIL = get_config('DEFAULT_FROM_EMAIL', 'no-reply@divijhanda.in')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
+# ElectionBench — private page password + streamed-results ingest token.
+# Both unset by default = the page 404s / ingest is off until configured (in config.json).
+ELECTIONBENCH_PASSWORD = get_config('ELECTIONBENCH_PASSWORD', '')
+ELECTIONBENCH_TOKEN = get_config('ELECTIONBENCH_TOKEN', '')
+
 if get_config('EMAIL_HOST'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = get_config('EMAIL_HOST')
