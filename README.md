@@ -63,6 +63,9 @@ Settings read from environment variables first, then `config.json`, then a defau
 | `EMAIL_PORT`          | SMTP port (default `587`).                                     |
 | `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | SMTP credentials.                          |
 | `EMAIL_USE_TLS`       | `True`/`False` (default `True`).                               |
+| `STATIC_DIR`          | Name of the collectstatic output dir (default `staticfiles`); set to match your web server's `/static` alias. |
+| `SECURE_SSL_REDIRECT` | `True` to force HTTPS (default `False` — enable once HTTPS is confirmed end-to-end). |
+| `SECURE_HSTS_SECONDS` | HSTS max-age in seconds; `0` disables (default `0`).           |
 
 ## Contact form
 Submissions are always saved to the database (**Contact messages** in the admin) and,

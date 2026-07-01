@@ -54,15 +54,18 @@ CSRF_TRUSTED_ORIGINS = ['https://divijhanda.in', 'https://www.divijhanda.in']
 # Production hardening — applied only for real deployments (DEBUG off), so local
 # development over plain HTTP is unaffected.
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    # Trust the X-Forwarded-Proto header set by the reverse proxy / load balancer.
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # Trust X-Forwarded-Proto from a front-end proxy, if it sets one.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # HTTPS redirect + HSTS are opt-in (default off): enable them via config once
+    # you've confirmed the front-end serves/forwards HTTPS. This avoids a redirect
+    # loop behind a proxy that doesn't forward the scheme, and prevents committing
+    # browsers to HSTS before you're ready.
+    SECURE_SSL_REDIRECT = str(get_config('SECURE_SSL_REDIRECT', 'False')).lower() in ('1', 'true', 'yes')
+    SECURE_HSTS_SECONDS = int(get_config('SECURE_HSTS_SECONDS', '0') or 0)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_PRELOAD = SECURE_HSTS_SECONDS > 0
 
 
 # Application definition
@@ -163,7 +166,9 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Where collectstatic writes (served by the front-end web server in prod).
+# Overridable (STATIC_DIR) so it can match an existing server's /static alias.
+STATIC_ROOT = BASE_DIR / get_config('STATIC_DIR', 'staticfiles')
 
 # In production, WhiteNoise compresses and hashes static files (cache-busting).
 # In development the default storage avoids the collectstatic/manifest step.
