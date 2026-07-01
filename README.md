@@ -66,11 +66,29 @@ Settings read from environment variables first, then `config.json`, then a defau
 | `STATIC_DIR`          | Name of the collectstatic output dir (default `staticfiles`); set to match your web server's `/static` alias. |
 | `SECURE_SSL_REDIRECT` | `True` to force HTTPS (default `False` — enable once HTTPS is confirmed end-to-end). |
 | `SECURE_HSTS_SECONDS` | HSTS max-age in seconds; `0` disables (default `0`).           |
+| `ELECTIONBENCH_PASSWORD` | Password for the private `/electionbench` page (unset = page 404s). |
+| `ELECTIONBENCH_TOKEN` | Bearer token the simulation uses to stream results (unset = ingest off). |
 
 ## Contact form
 Submissions are always saved to the database (**Contact messages** in the admin) and,
 when SMTP is configured, also emailed to `CONTACT_EMAIL` with the sender as `Reply-To`.
 Nothing is required for local dev — mail is printed to the console.
+
+## Private ElectionBench page
+`/electionbench` is a password-gated, `noindex` page (excluded from the sitemap, disallowed
+in robots) for privately sharing a live benchmark. Set `ELECTIONBENCH_PASSWORD` and
+`ELECTIONBENCH_TOKEN` in config to enable it. Edit the title/overview/methodology under
+**ElectionBench** in the admin; the results table is streamed in by the simulation:
+
+```bash
+curl -X POST https://www.divijhanda.in/electionbench/ingest/ \
+  -H "X-Api-Token: $ELECTIONBENCH_TOKEN" -H "Content-Type: application/json" \
+  -d '{"columns":["Model","Win %"],"rows":[["GPT-4o",62.1]],"status":"Running 37/100"}'
+```
+
+> Use the **`X-Api-Token`** header, not `Authorization: Bearer` — Apache/mod_wsgi strips the
+> `Authorization` header unless `WSGIPassAuthorization On` is set. The page auto-refreshes
+> every ~10 min. Body fields: `columns` (list), `rows` (list of lists), optional `status`, `note`.
 
 ## Deployment notes
 - Set a real `SECRET_KEY` and `DEBUG=False`. With `DEBUG=False`, production hardening
