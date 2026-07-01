@@ -515,7 +515,11 @@ textarea.field { min-height: 150px; resize: vertical; }
 
 /* head-to-head explorer */
 .eb-picker { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin: 1rem 0 1.4rem; }
-.eb-select { width: auto; min-width: 190px; margin: 0; cursor: pointer; }
+.eb-select { width: auto; min-width: 190px; margin: 0; cursor: pointer;
+    /* Opaque background so the native option list isn't washed-out/light in dark mode
+       (the shared --surface token is translucent). */
+    background-color: var(--bg); color: var(--text); }
+.eb-select option { background-color: var(--bg); color: var(--text); }
 .eb-vs { font-family: var(--font-mono); color: var(--faint); }
 .eb-h2h-summary { display: flex; flex-direction: column; gap: .35rem; padding: 1rem 1.1rem;
     border: 1px solid var(--border); border-left: 2px solid var(--accent); border-radius: 0 10px 10px 0;
