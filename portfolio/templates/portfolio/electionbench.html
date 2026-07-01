@@ -39,11 +39,14 @@
     {% endif %}
 
     <div class="reveal" style="margin-top:2.2rem">
-        <h2 class="detail-h">Results</h2>
+        <div class="head-row" style="align-items:baseline">
+            <h2 class="detail-h" style="margin:0">Leaderboard</h2>
+            <span class="eb-hint">click a column to sort</span>
+        </div>
         {% with r=bench.results %}
         {% if r.rows %}
         <div class="eb-table-wrap">
-            <table class="eb-table">
+            <table class="eb-table" id="eb-leaderboard">
                 <thead><tr>{% for c in r.columns %}<th>{{ c }}</th>{% endfor %}</tr></thead>
                 <tbody>
                     {% for row in r.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
@@ -51,11 +54,32 @@
             </table>
         </div>
         {% if r.note %}<p class="eb-note">{{ r.note }}</p>{% endif %}
+        {{ r.models|json_script:"eb-models" }}
         {% else %}
         <div class="empty-state">No results streamed yet — they'll appear here as the simulation runs.</div>
         {% endif %}
         {% endwith %}
     </div>
+
+    {% if bench.results.models %}
+    <div class="reveal" id="eb-explorer" style="margin-top:2.6rem">
+        <h2 class="detail-h">Head-to-head explorer</h2>
+        <p class="eb-note" style="margin-top:0">Pick two candidate models to see their record and open any game's full transcript.</p>
+        <div class="eb-picker">
+            <select class="field eb-select" id="eb-a" aria-label="Model A"></select>
+            <span class="eb-vs">vs</span>
+            <select class="field eb-select" id="eb-b" aria-label="Model B"></select>
+        </div>
+        <div id="eb-h2h"></div>
+        <div id="eb-game" class="eb-transcript-wrap" hidden>
+            <div class="eb-transcript-head">
+                <span id="eb-game-title"></span>
+                <button type="button" class="pub-toggle" id="eb-game-close">close ✕</button>
+            </div>
+            <pre id="eb-transcript" class="eb-transcript"></pre>
+        </div>
+    </div>
+    {% endif %}
 
     {% if bench.methodology %}
     <div class="reveal" style="margin-top:2.2rem">
@@ -65,4 +89,8 @@
     {% endif %}
 </section>
 {% endif %}
+{% endblock %}
+
+{% block js %}
+{% if not locked %}<script src="{% static 'portfolio/js/electionbench.js' %}"></script>{% endif %}
 {% endblock %}

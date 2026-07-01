@@ -83,6 +83,17 @@ class ElectionBenchAdmin(admin.ModelAdmin):
         return False
 
 
+@admin.register(models.Game)
+class GameAdmin(admin.ModelAdmin):
+    list_display = ('log_name', 'model_a', 'model_b', 'seed', 'game_idx', 'winner_model', 'updated_at')
+    list_filter = ('model_a', 'model_b')
+    search_fields = ('log_name', 'model_a', 'model_b', 'winner_model')
+    readonly_fields = [f.name for f in models.Game._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+
 admin.site.register(models.Tag)
 
 admin.site.site_header = 'Divij Handa — Portfolio admin'

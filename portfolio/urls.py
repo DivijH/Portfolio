@@ -12,4 +12,6 @@ urlpatterns = [
     path('contact/', views.ContactView.as_view(), name='contact'),
     path('electionbench/', views.ElectionBenchView.as_view(), name='electionbench'),
     path('electionbench/ingest/', views.electionbench_ingest, name='electionbench_ingest'),
+    path('electionbench/h2h/', views.electionbench_h2h, name='electionbench_h2h'),
+    path('electionbench/game/<int:game_id>/', views.electionbench_game, name='electionbench_game'),
 ]

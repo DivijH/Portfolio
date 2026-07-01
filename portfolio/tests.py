@@ -94,6 +94,7 @@ class ContactFormTests(TestCase):
 class ElectionBenchTests(TestCase):
     url = reverse('portfolio:electionbench')
     ingest = reverse('portfolio:electionbench_ingest')
+    h2h = reverse('portfolio:electionbench_h2h')
 
     def test_locked_and_noindex(self):
         r = self.client.get(self.url)
@@ -135,3 +136,38 @@ class ElectionBenchTests(TestCase):
     @override_settings(ELECTIONBENCH_PASSWORD='')
     def test_404_when_unconfigured(self):
         self.assertEqual(self.client.get(self.url).status_code, 404)
+
+    def _ingest_two_games(self):
+        body = {"games": [
+            {"log_name": "cand_x_v_cand_y_100_0.jsonl", "model_a": "cand_x", "model_b": "cand_y",
+             "seed": 100, "game_idx": 0, "winner_model": "cand_x", "popular_margin": 0.1,
+             "states_a": 3, "states_b": 2, "turnout": 0.5, "transcript": "X campaigned hard. X wins."},
+            {"log_name": "cand_x_v_cand_y_100_1.jsonl", "model_a": "cand_x", "model_b": "cand_y",
+             "seed": 100, "game_idx": 1, "winner_model": "cand_y", "popular_margin": -0.05,
+             "states_a": 2, "states_b": 3, "transcript": "Y edged it."},
+        ]}
+        return self.client.post(self.ingest, data=json.dumps(body), content_type='application/json',
+                                HTTP_X_API_TOKEN='tok-test')  # X-Api-Token (Apache-safe) path
+
+    def test_games_ingest_upserts(self):
+        r = self._ingest_two_games()
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()['games_upserted'], 2)
+        self.assertEqual(models.Game.objects.count(), 2)
+        self._ingest_two_games()  # idempotent (upsert by log_name)
+        self.assertEqual(models.Game.objects.count(), 2)
+
+    def test_h2h_requires_session_then_returns_record(self):
+        self._ingest_two_games()
+        self.assertEqual(self.client.get(self.h2h, {'a': 'cand_x', 'b': 'cand_y'}).status_code, 403)
+        s = self.client.session; s['eb_ok'] = True; s.save()
+        d = self.client.get(self.h2h, {'a': 'cand_x', 'b': 'cand_y'}).json()
+        self.assertEqual((d['n'], d['a_wins'], d['b_wins']), (2, 1, 1))
+        self.assertEqual(len(d['games']), 2)
+
+    def test_game_transcript_endpoint(self):
+        self._ingest_two_games()
+        s = self.client.session; s['eb_ok'] = True; s.save()
+        gid = models.Game.objects.get(log_name='cand_x_v_cand_y_100_0.jsonl').id
+        t = self.client.get(reverse('portfolio:electionbench_game', args=[gid])).json()
+        self.assertIn('X wins', t['transcript'])

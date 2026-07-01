@@ -315,3 +315,31 @@ class ElectionBench(models.Model):
     def load(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class Game(models.Model):
+    """One ElectionBench head-to-head game (from a *_v_*.jsonl match log).
+
+    All stats are resolved to the two models (the slot→model mirror is handled by
+    the streamer), so model_a/model_b are real model names and `popular_margin` is
+    signed toward model_a. Streamed in (with a transcript) via the ingest endpoint.
+    """
+    log_name = models.CharField(max_length=200, unique=True)
+    model_a = models.CharField(max_length=80)
+    model_b = models.CharField(max_length=80)
+    seed = models.IntegerField(default=0)
+    game_idx = models.IntegerField(default=0)
+    winner_model = models.CharField(max_length=80, blank=True)  # '' = draw / no decision
+    popular_margin = models.FloatField(null=True, blank=True)   # signed toward model_a
+    states_a = models.IntegerField(default=0)
+    states_b = models.IntegerField(default=0)
+    turnout = models.FloatField(null=True, blank=True)
+    transcript = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['model_a', 'model_b', 'seed', 'game_idx']
+        indexes = [models.Index(fields=['model_a', 'model_b'])]
+
+    def __str__(self):
+        return self.log_name

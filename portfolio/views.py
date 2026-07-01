@@ -191,14 +191,92 @@ def electionbench_ingest(request):
     if not isinstance(payload, dict):
         return JsonResponse({'ok': False, 'error': 'expected a JSON object'}, status=400)
 
+    # Games batch (explorer data) — upsert by log_name.
+    if isinstance(payload.get('games'), list):
+        n = 0
+        for g in payload['games']:
+            ln = g.get('log_name')
+            if not ln:
+                continue
+            models.Game.objects.update_or_create(log_name=ln[:200], defaults={
+                'model_a': (g.get('model_a') or '')[:80],
+                'model_b': (g.get('model_b') or '')[:80],
+                'seed': int(g.get('seed') or 0),
+                'game_idx': int(g.get('game_idx') or 0),
+                'winner_model': (g.get('winner_model') or '')[:80],
+                'popular_margin': g.get('popular_margin'),
+                'states_a': int(g.get('states_a') or 0),
+                'states_b': int(g.get('states_b') or 0),
+                'turnout': g.get('turnout'),
+                'transcript': g.get('transcript') or '',
+            })
+            n += 1
+        return JsonResponse({'ok': True, 'games_upserted': n})
+
+    # Leaderboard update.
     bench = models.ElectionBench.load()
     bench.results = {
         'columns': payload.get('columns', []),
         'rows': payload.get('rows', []),
         'note': str(payload.get('note', '')),
+        'models': payload.get('models', []),
     }
     if 'status' in payload:
         bench.status = str(payload.get('status', ''))[:160]
     bench.results_updated_at = timezone.now()
     bench.save()
     return JsonResponse({'ok': True, 'updated_at': bench.results_updated_at.isoformat()})
+
+
+def electionbench_h2h(request):
+    """Session-gated JSON: head-to-head record + game list for two models."""
+    if not request.session.get('eb_ok'):
+        return JsonResponse({'ok': False, 'error': 'locked'}, status=403)
+    a = request.GET.get('a', '').strip()
+    b = request.GET.get('b', '').strip()
+    if not a or not b or a == b:
+        return JsonResponse({'ok': False, 'error': 'pick two different models'}, status=400)
+    from django.db.models import Q
+    games = list(models.Game.objects.filter(
+        Q(model_a=a, model_b=b) | Q(model_a=b, model_b=a)).order_by('seed', 'game_idx'))
+
+    def margin_a(g):
+        if g.popular_margin is None:
+            return None
+        return g.popular_margin if g.model_a == a else -g.popular_margin
+
+    def states_of(g, model):
+        return g.states_a if model == g.model_a else g.states_b
+
+    n = len(games)
+    a_wins = sum(1 for g in games if g.winner_model == a)
+    b_wins = sum(1 for g in games if g.winner_model == b)
+    draws = sum(1 for g in games if not g.winner_model)
+    margins = [m for m in (margin_a(g) for g in games) if m is not None]
+    return JsonResponse({
+        'ok': True, 'a': a, 'b': b, 'n': n,
+        'a_wins': a_wins, 'b_wins': b_wins, 'draws': draws,
+        'a_win_pct': round(100 * a_wins / n, 1) if n else 0.0,
+        'avg_margin_a': round(sum(margins) / len(margins), 4) if margins else None,
+        'games': [{
+            'id': g.id, 'seed': g.seed, 'game_idx': g.game_idx,
+            'winner': g.winner_model or 'draw',
+            'margin_a': margin_a(g), 'states_a': states_of(g, a), 'states_b': states_of(g, b),
+            'turnout': g.turnout,
+        } for g in games],
+    })
+
+
+def electionbench_game(request, game_id):
+    """Session-gated JSON: one game's full transcript."""
+    if not request.session.get('eb_ok'):
+        return JsonResponse({'ok': False, 'error': 'locked'}, status=403)
+    try:
+        g = models.Game.objects.get(pk=game_id)
+    except models.Game.DoesNotExist:
+        raise Http404()
+    return JsonResponse({
+        'ok': True, 'log_name': g.log_name, 'model_a': g.model_a, 'model_b': g.model_b,
+        'seed': g.seed, 'game_idx': g.game_idx, 'winner_model': g.winner_model,
+        'transcript': g.transcript,
+    })
