@@ -335,6 +335,7 @@ class Game(models.Model):
     states_b = models.IntegerField(default=0)
     turnout = models.FloatField(null=True, blank=True)
     transcript = models.TextField(blank=True)
+    detail = models.JSONField(default=dict, blank=True)  # {setup, timeline} for the full-page view
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

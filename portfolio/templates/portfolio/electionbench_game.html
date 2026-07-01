@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ g.model_a }} vs {{ g.model_b }} · seed {{ g.seed }} — ElectionBench{% endblock %}
+{% block meta_description %}ElectionBench game.{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:2.4rem">
+    <a class="section-link" href="{% url 'portfolio:electionbench' %}">← ElectionBench</a>
+
+    {% with s=detail.setup %}
+    <h1 class="eb-game-title">
+        {% if s %}{{ s.candidate_a }}{% else %}{{ g.model_a }}{% endif %}
+        <span class="eb-vs">vs</span>
+        {% if s %}{{ s.candidate_b }}{% else %}{{ g.model_b }}{% endif %}
+    </h1>
+
+    {% if s %}
+    <p class="eb-note" style="margin-top:.4rem">
+        Winner <strong>{{ s.winner }}</strong> · states {{ s.states_a }}–{{ s.states_b }} ·
+        popular margin {{ s.popular_margin_a }} · turnout {{ s.turnout }}
+    </p>
+
+    <div class="eb-setup">
+        <div><span class="k">Parties</span><span class="v">{{ s.party_a }} <em>/</em> {{ s.party_b }}</span></div>
+        <div><span class="k">World seed</span><span class="v">{{ s.world_seed }} · opener {{ s.opener }}</span></div>
+        <div><span class="k">States</span><span class="v">{{ s.n_states }}</span></div>
+        <div><span class="k">Campaign</span><span class="v">{{ s.n_days }} days × {{ s.actions_per_day }} actions</span></div>
+        <div><span class="k">Start budget</span><span class="v">{{ s.start_budget }}</span></div>
+        <div><span class="k">Voters / state</span><span class="v">{{ s.hyperparams.voters_per_state_range|join:"–" }}</span></div>
+        <div><span class="k">Voter LLMs</span><span class="v">{{ s.voter_models|join:", " }}</span></div>
+        <div><span class="k">Donor LLMs</span><span class="v">{{ s.donor_models|join:", " }}</span></div>
+        <div><span class="k">Demographics</span><span class="v">{{ s.demographics|join:", " }}</span></div>
+        <div><span class="k">Lean strength</span><span class="v">{{ s.hyperparams.lean_strength }}</span></div>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% if detail.timeline %}
+    <p class="eb-hint" style="margin:1.6rem 0 .6rem">Candidate model calls are expanded; voter/donor calls are collapsed — click to open.</p>
+    <div class="eb-timeline">
+        {% for it in detail.timeline %}
+            {% if it.t == 'day' %}
+                <h3 class="eb-tl-day">Day {{ it.day }}</h3>
+            {% elif it.t == 'cand_call' %}
+                <details class="eb-call cand" open>
+                    <summary><span class="eb-call-kind">model call</span> {{ it.model }} <span class="eb-tag">{{ it.tag }}</span></summary>
+                    <div class="eb-call-body">
+                        <div class="eb-io-label">prompt given to the model</div>
+                        <pre class="eb-io">{{ it.prompt }}</pre>
+                        <div class="eb-io-label">model response — reasoning + action</div>
+                        <pre class="eb-io resp">{{ it.response }}</pre>
+                    </div>
+                </details>
+            {% elif it.t == 'other_call' %}
+                <details class="eb-call other">
+                    <summary><span class="eb-tag">{{ it.tag }}</span> call · {{ it.model }}</summary>
+                    <div class="eb-call-body">
+                        <div class="eb-io-label">prompt</div><pre class="eb-io">{{ it.prompt }}</pre>
+                        <div class="eb-io-label">response</div><pre class="eb-io resp">{{ it.response }}</pre>
+                    </div>
+                </details>
+            {% elif it.t == 'action' %}
+                <div class="eb-tl-action">{{ it.text|linebreaksbr }}</div>
+            {% elif it.t == 'env' %}
+                <div class="eb-tl-env">{{ it.text }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="eb-transcript-wrap" style="margin-top:1.6rem">
+        <pre class="eb-transcript">{{ g.transcript }}</pre>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

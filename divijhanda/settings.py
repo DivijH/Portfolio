@@ -197,6 +197,9 @@ CONTACT_EMAIL = get_config('CONTACT_EMAIL', 'dhanda@asu.edu')
 DEFAULT_FROM_EMAIL = get_config('DEFAULT_FROM_EMAIL', 'no-reply@divijhanda.in')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
+# Allow large ingest payloads (a game's full LLM I/O timeline can be several MB).
+DATA_UPLOAD_MAX_MEMORY_SIZE = 30 * 1024 * 1024
+
 # ElectionBench — private page password + streamed-results ingest token.
 # Both unset by default = the page 404s / ingest is off until configured (in config.json).
 ELECTIONBENCH_PASSWORD = get_config('ELECTIONBENCH_PASSWORD', '')

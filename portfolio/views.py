@@ -209,6 +209,7 @@ def electionbench_ingest(request):
                 'states_b': int(g.get('states_b') or 0),
                 'turnout': g.get('turnout'),
                 'transcript': g.get('transcript') or '',
+                'detail': g.get('detail') or {},
             })
             n += 1
         return JsonResponse({'ok': True, 'games_upserted': n})
@@ -268,15 +269,13 @@ def electionbench_h2h(request):
 
 
 def electionbench_game(request, game_id):
-    """Session-gated JSON: one game's full transcript."""
+    """Session-gated full-page view of one game (setup + timeline, or the flat transcript)."""
+    if not settings.ELECTIONBENCH_PASSWORD:
+        raise Http404()
     if not request.session.get('eb_ok'):
-        return JsonResponse({'ok': False, 'error': 'locked'}, status=403)
+        return redirect('portfolio:electionbench')
     try:
         g = models.Game.objects.get(pk=game_id)
     except models.Game.DoesNotExist:
         raise Http404()
-    return JsonResponse({
-        'ok': True, 'log_name': g.log_name, 'model_a': g.model_a, 'model_b': g.model_b,
-        'seed': g.seed, 'game_idx': g.game_idx, 'winner_model': g.winner_model,
-        'transcript': g.transcript,
-    })
+    return render(request, 'portfolio/electionbench_game.html', {'g': g, 'detail': g.detail or None})

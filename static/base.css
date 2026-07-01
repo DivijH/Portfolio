@@ -536,6 +536,42 @@ textarea.field { min-height: 150px; resize: vertical; }
 .eb-transcript { margin: 0; padding: 1.1rem; max-height: 560px; overflow: auto; white-space: pre-wrap;
     font-family: var(--font-mono); font-size: .78rem; line-height: 1.6; color: var(--text); background: var(--bg); }
 
+/* full-page game view */
+.eb-game-title { font-size: clamp(1.7rem, 4vw, 2.6rem); margin: .5rem 0 0; letter-spacing: -.02em; }
+.eb-game-title .eb-vs { color: var(--faint); font-family: var(--font-mono); font-size: .55em; margin: 0 .3rem; }
+.eb-setup { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .1rem 1.4rem;
+    margin: 1.4rem 0 .5rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.3rem;
+    background: var(--surface); }
+.eb-setup > div { display: flex; justify-content: space-between; gap: 1rem; padding: .45rem 0;
+    border-bottom: 1px solid var(--border); }
+.eb-setup .k { font-family: var(--font-mono); font-size: .74rem; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
+.eb-setup .v { font-size: .88rem; color: var(--text); text-align: right; }
+
+.eb-timeline { margin-top: 1rem; border-left: 2px solid var(--border); padding-left: 1.1rem; }
+.eb-tl-day { font-family: var(--font-mono); font-size: .9rem; color: var(--accent); letter-spacing: .08em;
+    margin: 1.8rem 0 .7rem; text-transform: uppercase; }
+.eb-tl-action { font-size: .9rem; color: var(--text); margin: .3rem 0; line-height: 1.5; }
+.eb-tl-env { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); margin: .5rem 0;
+    padding: .35rem .6rem; background: var(--code-bg); border-radius: 6px; }
+
+.eb-call { margin: .5rem 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
+.eb-call.cand { border-color: var(--accent-soft); background: var(--accent-soft); }
+.eb-call > summary { cursor: pointer; padding: .6rem .85rem; font-family: var(--font-mono); font-size: .8rem;
+    display: flex; align-items: center; gap: .5rem; list-style: none; }
+.eb-call > summary::-webkit-details-marker { display: none; }
+.eb-call > summary::before { content: '▸'; color: var(--accent); transition: transform .15s; }
+.eb-call[open] > summary::before { transform: rotate(90deg); }
+.eb-call-kind { color: var(--accent); font-weight: 600; }
+.eb-tag { font-size: .68rem; padding: .05rem .45rem; border-radius: 5px; border: 1px solid var(--border);
+    color: var(--muted); background: var(--bg); }
+.eb-call-body { padding: 0 .85rem .85rem; }
+.eb-io-label { font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--faint); margin: .6rem 0 .25rem; }
+.eb-io { margin: 0; padding: .7rem .85rem; white-space: pre-wrap; word-break: break-word; max-height: 420px; overflow: auto;
+    font-family: var(--font-mono); font-size: .76rem; line-height: 1.55; color: var(--text);
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
+.eb-io.resp { border-left: 2px solid var(--accent); }
+
 /* ============================================================
    Empty states
    ============================================================ */

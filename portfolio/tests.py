@@ -165,9 +165,26 @@ class ElectionBenchTests(TestCase):
         self.assertEqual((d['n'], d['a_wins'], d['b_wins']), (2, 1, 1))
         self.assertEqual(len(d['games']), 2)
 
-    def test_game_transcript_endpoint(self):
+    def test_game_page_renders_and_is_gated(self):
         self._ingest_two_games()
-        s = self.client.session; s['eb_ok'] = True; s.save()
         gid = models.Game.objects.get(log_name='cand_x_v_cand_y_100_0.jsonl').id
-        t = self.client.get(reverse('portfolio:electionbench_game', args=[gid])).json()
-        self.assertIn('X wins', t['transcript'])
+        url = reverse('portfolio:electionbench_game', args=[gid])
+        self.assertEqual(self.client.get(url).status_code, 302)  # redirects to gate when locked
+        s = self.client.session; s['eb_ok'] = True; s.save()
+        r = self.client.get(url)
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'X campaigned')  # transcript fallback (no detail here)
+
+    def test_game_detail_ingest(self):
+        body = {"games": [{"log_name": "g_v_h_1_0.jsonl", "model_a": "cand_g", "model_b": "cand_h",
+                           "winner_model": "cand_g",
+                           "detail": {"setup": {"candidate_a": "g", "candidate_b": "h"},
+                                      "timeline": [{"t": "cand_call", "tag": "action", "model": "g",
+                                                    "prompt": "OBSERVATION XYZ", "response": "REASONING then action"}]}}]}
+        self.client.post(self.ingest, data=json.dumps(body), content_type='application/json',
+                         HTTP_X_API_TOKEN='tok-test')
+        s = self.client.session; s['eb_ok'] = True; s.save()
+        gid = models.Game.objects.get(log_name='g_v_h_1_0.jsonl').id
+        r = self.client.get(reverse('portfolio:electionbench_game', args=[gid]))
+        self.assertContains(r, 'OBSERVATION XYZ')
+        self.assertContains(r, 'REASONING then action')

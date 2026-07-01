@@ -55,10 +55,6 @@
     if (models.length > 1) { selA.selectedIndex = 0; selB.selectedIndex = 1; }
 
     var h2hBox = document.getElementById('eb-h2h');
-    var gameBox = document.getElementById('eb-game');
-    var pre = document.getElementById('eb-transcript');
-    var gameTitle = document.getElementById('eb-game-title');
-    document.getElementById('eb-game-close').addEventListener('click', function () { gameBox.hidden = true; });
 
     function renderH2H(d) {
         if (!d.ok) { h2hBox.innerHTML = '<p class="eb-note">' + (d.error || 'error') + '</p>'; return; }
@@ -71,41 +67,21 @@
             ' · avg margin ' + fmtMargin(d.avg_margin_a) + ' toward ' + A + '</span></div>';
         var rows = d.games.map(function (g) {
             var w = g.winner === 'draw' ? 'draw' : strip(g.winner);
-            return '<tr data-id="' + g.id + '" class="eb-game-row">' +
+            return '<tr>' +
                 '<td>' + g.seed + '/' + g.game_idx + '</td>' +
                 '<td>' + w + '</td>' +
                 '<td>' + fmtMargin(g.margin_a) + '</td>' +
                 '<td>' + g.states_a + '–' + g.states_b + '</td>' +
-                '<td class="eb-open">view →</td></tr>';
+                '<td><a class="eb-open" href="/electionbench/game/' + g.id + '/" target="_blank" rel="noopener">open ↗</a></td></tr>';
         }).join('');
         h2hBox.innerHTML = summary +
             '<div class="eb-table-wrap" style="margin-top:1rem"><table class="eb-table eb-games">' +
             '<thead><tr><th>Seed/mirror</th><th>Winner</th><th>Margin→' + A + '</th><th>States ' + A + '–' + B + '</th><th></th></tr></thead>' +
             '<tbody>' + rows + '</tbody></table></div>';
-        Array.prototype.forEach.call(h2hBox.querySelectorAll('.eb-game-row'), function (tr) {
-            tr.addEventListener('click', function () { openGame(tr.getAttribute('data-id')); });
-        });
-    }
-
-    function openGame(id) {
-        gameTitle.textContent = 'Loading transcript…';
-        gameBox.hidden = false;
-        pre.textContent = '';
-        gameBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        fetch('/electionbench/game/' + id + '/', { credentials: 'same-origin' })
-            .then(function (r) { return r.json(); })
-            .then(function (d) {
-                if (!d.ok) { pre.textContent = d.error || 'error'; return; }
-                gameTitle.textContent = strip(d.model_a) + ' vs ' + strip(d.model_b) + ' · seed ' + d.seed +
-                    ' · winner ' + (d.winner_model ? strip(d.winner_model) : 'draw');
-                pre.textContent = d.transcript || '(no transcript)';
-            })
-            .catch(function () { pre.textContent = 'Failed to load.'; });
     }
 
     function fetchH2H() {
         var a = selA.value, b = selB.value;
-        gameBox.hidden = true;
         if (!a || !b || a === b) { h2hBox.innerHTML = '<p class="eb-note">Pick two different models.</p>'; return; }
         h2hBox.innerHTML = '<p class="eb-note">Loading…</p>';
         fetch('/electionbench/h2h/?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b),
