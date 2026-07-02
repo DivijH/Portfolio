@@ -323,6 +323,7 @@ _STATE_RE = re.compile(r'\bS(\d+): (\d+) voters')
 
 
 _REASON_MARK = re.compile(r'(?im)^\s*reasoning\s*:')
+_PROMPT_DAY_RE = re.compile(r'===\s*Day\s+(\d+)\s+of\b')
 
 
 def _parse_llm_response(text):
@@ -376,31 +377,38 @@ def _build_game_chat(g):
     if setup.get('candidate_b') and setup.get('candidate_b') != setup.get('candidate_a'):
         slot_of[setup['candidate_b']] = 'B'
 
-    days = []
-    cur = None
+    # The sim logs each day's first LLM call *before* it writes the day
+    # marker, so a call's own "=== Day N of M ===" prompt header is the
+    # authoritative day; the running marker is only the fallback (and is
+    # what events/env attach to).
+    sections = {}
+    def section(n):
+        if n not in sections:
+            sections[n] = {'n': n, 'items': [], 'debate': [], 'env': '', 'env_stats': None}
+        return sections[n]
+
+    cur_n = None
     systems = {}          # slot -> system prompt (shown once, in the header)
     state_sizes = []
-
-    def day(n):
-        d = {'n': n, 'items': [], 'debate': [], 'env': '', 'env_stats': None}
-        days.append(d)
-        return d
 
     for it in timeline:
         t = it.get('t')
         if t == 'day':
-            cur = day(it.get('day'))
+            cur_n = it.get('day') or ((cur_n or 0) + 1)
+            section(cur_n)
             continue
-        if cur is None:
-            cur = day(1)
 
         if t == 'env':
+            cur = section(cur_n or 1)
             cur['env'] = (it.get('text') or '').strip()
             m = _ENV_RE.search(cur['env'])
             if m:
                 cur['env_stats'] = {'fav_a': m.group(1), 'fav_b': m.group(2),
                                     'bud_a': m.group(3), 'bud_b': m.group(4)}
         elif t == 'cand_call':
+            prompt = (it.get('prompt') or '').strip()
+            m = _PROMPT_DAY_RE.search(prompt)
+            cur = section(int(m.group(1)) if m else (cur_n or 1))
             thinking, deliberation, prose, action = _parse_llm_response(it.get('response'))
             slot = slot_of.get(it.get('model'), '')
             entry = {
@@ -408,14 +416,15 @@ def _build_game_chat(g):
                 'model': it.get('model', ''),
                 'thinking': thinking, 'deliberation': deliberation,
                 'prose': prose, 'action': action,
-                'prompt': (it.get('prompt') or '').strip(),
+                'prompt': prompt,
             }
             if slot and slot not in systems and (it.get('system') or '').strip():
                 systems[slot] = it['system'].strip()
             if not state_sizes:
-                state_sizes = _STATE_RE.findall(it.get('prompt') or '')
+                state_sizes = _STATE_RE.findall(prompt)
             (cur['debate'] if it.get('tag') == 'debate' else cur['items']).append(entry)
         elif t == 'action':
+            cur = section(cur_n or 1)
             entry = {
                 'kind': 'event', 'event_kind': it.get('kind', ''),
                 'slot': it.get('slot') or '', 'text': (it.get('text') or '').strip(),
@@ -423,12 +432,13 @@ def _build_game_chat(g):
             target = cur['debate'] if 'debate' in (it.get('kind') or '') else cur['items']
             target.append(entry)
         elif t == 'other_call':
-            cur['items'].append({
+            section(cur_n or 1)['items'].append({
                 'kind': 'other', 'tag': it.get('tag', ''), 'model': it.get('model', ''),
                 'prompt': (it.get('prompt') or '').strip(),
                 'response': (it.get('response') or '').strip(),
             })
 
+    days = [sections[n] for n in sorted(sections)]
     return {
         'setup': setup,
         'days': days,
