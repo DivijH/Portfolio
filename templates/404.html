@@ -6,8 +6,8 @@
 {% block content %}
 <div class="notfound">
     <div class="code">404</div>
-    <h1>This page returned out-of-distribution.</h1>
-    <p class="lead">The URL you requested doesn't exist — or wandered off into latent space.</p>
-    <a class="btn btn-primary" href="{% url 'portfolio:index' %}">← Back home</a>
+    <h1>Page not found</h1>
+    <p class="lead">The URL you requested doesn't exist or has moved. Let's get you back on track.</p>
+    <a class="btn btn-primary" href="{% url 'portfolio:index' %}" data-magnetic><span>← Back home</span></a>
 </div>
 {% endblock %}

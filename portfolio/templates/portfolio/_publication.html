@@ -1,12 +1,12 @@
 {% load portfolio_extras %}
-<article class="pub reveal">
-    <div class="pub-index">{{ index|stringformat:"02d" }}</div>
+<article class="pub reveal" {% if pub.slug %}data-cursor="read"{% endif %}>
+    <div class="pub-index">[{{ index|stringformat:"03d" }}]</div>
     <div class="pub-body">
         <h3>{% if pub.slug %}<a class="pub-title-link" href="{% url 'portfolio:publication' pub.slug %}">{{ pub.title }}</a>{% else %}{{ pub.title }}{% endif %}{% if pub.award %}<span class="badge">{{ pub.award }}</span>{% endif %}</h3>
         <p class="authors">{{ pub.authors|highlight_author:profile.name }}</p>
         <p class="venue">
             {% if pub.is_published %}
-                <span class="venue-pill"><span class="tick">✓</span> Accepted at {{ pub.venue }}</span>
+                <span class="venue-pill"><span class="tick">✓</span> {{ pub.venue }}</span>
                 <span class="kind">{{ pub.get_kind_display }}</span>
             {% else %}
                 <span class="venue-pill preprint">Preprint</span>

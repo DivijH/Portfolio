@@ -5,12 +5,12 @@
 
 {% block content %}
 <header class="page-head">
-    <p class="eyebrow">Research output</p>
+    <p class="eyebrow">03 / Research output</p>
     <h1>Publications</h1>
-    <p>Peer-reviewed papers, workshop contributions and preprints. {{ total }} total — click <em>Abstract</em> or <em>BibTeX</em> on any entry to expand.</p>
+    <p>Peer-reviewed papers, workshop contributions and preprints. {{ total }} total — expand <em>Abstract</em> or <em>BibTeX</em> on any entry.</p>
 </header>
 
-<section class="section" style="padding-top:1.5rem">
+<section class="section" style="padding-top:2.2rem">
     {% if tags %}
     <div class="filterbar reveal">
         <a href="{% url 'portfolio:publications' %}" class="{% if not active_tag %}active{% endif %}">All</a>
@@ -23,13 +23,15 @@
     {% regroup publications by year as year_list %}
     {% for year in year_list %}
         <div class="year-group">
-            <p class="year-label reveal">{{ year.grouper }}</p>
+            <p class="year-label reveal" aria-label="{{ year.grouper }}">{{ year.grouper }}</p>
+            <div class="year-rows">
             {% for pub in year.list %}
                 {% include 'portfolio/_publication.html' with pub=pub index=forloop.counter %}
             {% endfor %}
+            </div>
         </div>
     {% empty %}
-        <div class="empty-state">No publications yet{% if active_tag %} tagged “{{ active_tag }}”{% endif %}. Add them from the admin panel.</div>
+        <div class="empty-state">// no publications yet{% if active_tag %} tagged “{{ active_tag }}”{% endif %} — add them from the admin panel</div>
     {% endfor %}
 </section>
 {% endblock %}

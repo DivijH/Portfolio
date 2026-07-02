@@ -1,0 +1,33 @@
+{% comment %}The agent lifecycle as a pinned, scroll-driven horizontal chapter
+(home page). On desktop the section holds while vertical scroll moves the four
+stages sideways; the traveling light rides along. Falls back to a plain
+vertical stack without JS, on small screens/touch, and under reduced motion.{% endcomment %}
+<section class="lc-h" id="lifecycle">
+    <div class="lc-h-sticky">
+        <div class="lc-h-head">
+            <p class="eyebrow">Core research · LLM agents</p>
+            <h2 data-morph>The agent lifecycle</h2>
+        </div>
+        <div class="lc-h-track">
+            {% for stage in agent_pipeline %}
+            <article class="lc-slide">
+                <span class="lc-slide-num" aria-hidden="true">0{{ forloop.counter }}</span>
+                <p class="lc-slide-step">Stage {{ forloop.counter|stringformat:"02d" }} · {{ stage.papers|length }} paper{{ stage.papers|length|pluralize }}</p>
+                <h3 class="lc-slide-title">{{ stage.label }}</h3>
+                <p class="lc-slide-blurb">{{ stage.blurb }}</p>
+                <div class="lc-papers">
+                    {% for pub in stage.papers %}
+                        <a class="lc-paper" href="{{ pub.get_absolute_url }}" data-cursor="read">
+                            <span class="lc-paper-title">{{ pub.title }}</span>
+                            <span class="lc-paper-venue">{% if pub.is_published %}{{ pub.venue }}{% else %}Preprint{% endif %}</span>
+                        </a>
+                    {% empty %}
+                        <p class="ls-empty">Coming soon.</p>
+                    {% endfor %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        <div class="lc-h-progress" aria-hidden="true"><i></i></div>
+    </div>
+</section>

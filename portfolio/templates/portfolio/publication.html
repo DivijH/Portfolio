@@ -12,11 +12,11 @@
 {% block content %}
 <header class="page-head">
     <a class="section-link" href="{% url 'portfolio:publications' %}">← All publications</a>
-    <h1>{{ publication.title }}</h1>
+    <h1 class="pub-title">{{ publication.title }}</h1>
     <p class="pub-detail-authors">{{ publication.authors|highlight_author:profile.name }}</p>
     <div class="pub-detail-meta">
         {% if publication.is_published %}
-            <span class="venue-pill"><span class="tick">✓</span> Accepted at {{ publication.venue }}</span>
+            <span class="venue-pill"><span class="tick">✓</span> {{ publication.venue }}</span>
         {% else %}
             <span class="venue-pill preprint">Preprint</span>
         {% endif %}
@@ -26,10 +26,9 @@
     </div>
 </header>
 
-<section class="section" style="padding-top:1.5rem">
+<section class="section" style="padding-top:2.2rem">
     {% if publication.image %}
-        <img class="reveal" src="{{ publication.image.url }}" alt="{{ publication.title }}"
-             style="border-radius:var(--radius); border:1px solid var(--border); margin-bottom:2rem;">
+        <img class="reveal pub-figure" src="{{ publication.image.url }}" alt="{{ publication.title }}">
     {% endif %}
 
     {% if publication.links %}
@@ -48,7 +47,7 @@
     {% endif %}
 
     {% if publication.bibtex %}
-    <div class="reveal">
+    <div class="reveal" style="margin-top:2.2rem">
         <h2 class="detail-h">BibTeX <button class="pub-toggle" data-copy="bibtex-detail">copy</button></h2>
         <pre id="bibtex-detail" class="bibtex-block">{{ publication.bibtex }}</pre>
     </div>

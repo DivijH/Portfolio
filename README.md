@@ -3,11 +3,21 @@
 A research-forward personal site for an LLM researcher, built from scratch in **Django**.
 Live at [divijhanda.in](https://www.divijhanda.in).
 
-Design: a dark/light "Latent Space" theme — an interactive neural-constellation hero,
-an LLM-style token-stream tagline, an interactive agent-lifecycle stepper, and
-scroll-reveal animations throughout. All content (profile, publications, research
-areas, news, experience) is managed from the Django admin, so updates never require
-a redeploy. The CV PDF ships in static (override it by uploading a resume in the admin).
+Design: a dark-only "Latent Space" world — the whole site floats on a full-viewport
+WebGL fog (domain-warped noise in ultraviolet, `static/latent.js`, no dependencies)
+that reacts to the cursor. Scroll choreography drives the page like a story: a
+glowing light travels through the fog with you (beside the hero name, riding the
+pipeline, blooming behind the footer CTA), section titles morph letter-by-letter
+into one another as you scroll ("Divij Handa" literally re-assembles into "The
+agent lifecycle"), and the agent-lifecycle chapter pins while vertical scroll moves
+its four stages sideways with 3D depth (native scroll — no hijacking). A minimal loader (first visit
+per session) counts in while the field blooms; a single-ring cursor and magnetic
+buttons round it out. Type: Unbounded (display) · Instrument Sans (body) ·
+JetBrains Mono (small functional labels). Reduced motion gets a still fog frame and
+a plain vertical layout; everything degrades gracefully without JS/WebGL and on
+touch/small screens. All content (profile, publications, research areas, news,
+experience) is managed from the Django admin, so updates never require a redeploy.
+The CV PDF ships in static (override it by uploading a resume in the admin).
 
 ## Pages
 Home · Research · Publications (+ a page per paper) · Contact

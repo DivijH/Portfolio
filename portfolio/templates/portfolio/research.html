@@ -5,7 +5,7 @@
 
 {% block content %}
 <header class="page-head">
-    <p class="eyebrow">Research</p>
+    <p class="eyebrow">02 / Research</p>
     <h1>Research</h1>
     <p>{% if profile.bio %}{{ profile.bio }}{% else %}I study large language models — how they reason, what they represent, and how to evaluate and align them. Below are the threads I'm currently pulling on.{% endif %}</p>
 </header>
@@ -23,7 +23,7 @@
     <div class="area-grid">
         {% for area in research_areas %}
         <div class="card area-card reveal" data-delay="{{ forloop.counter0 }}">
-            {% if area.icon %}<span class="area-icon">{{ area.icon }}</span>{% endif %}
+            <span class="area-mark" aria-hidden="true"></span>
             <h3>{{ area.title }}</h3>
             <p>{{ area.description|default:area.summary }}</p>
         </div>
@@ -43,9 +43,11 @@
         </div>
         <a class="section-link" href="{% url 'portfolio:publications' %}">All publications →</a>
     </div>
+    <div class="pub-list">
     {% for pub in publications|slice:":5" %}
         {% include 'portfolio/_publication.html' with pub=pub index=forloop.counter %}
     {% endfor %}
+    </div>
 </section>
 {% endif %}
 {% endblock %}

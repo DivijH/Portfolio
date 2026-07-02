@@ -7,21 +7,25 @@
 {{ profile.stream_phrases|json_script:"stream-phrases" }}
 
 <section class="hero">
-    <canvas id="neural-canvas"></canvas>
-    <div class="hero-fade"></div>
     <div class="hero-inner">
-        <span class="hero-status"><span class="dot"></span> PhD researcher · LLM Agents · open to research collaborations &amp; internships</span>
-        <h1>Hi, I'm <span class="accent">{{ profile.name|default:"Divij Handa" }}</span>.</h1>
+        <span class="hero-status"><span class="dot"></span> PhD researcher · LLM agents · open to collaborations &amp; internships</span>
+        {% with name=profile.name|default:"Divij Handa" %}
+        <h1 class="hero-name" data-morph>
+            {% for word in name.split %}
+                <span class="row{% if not forloop.first %} ghost{% endif %}"><span class="row-in">{{ word }}</span></span>
+            {% endfor %}
+        </h1>
+        {% endwith %}
         <p class="hero-stream">
-            <span class="prompt">research_focus&nbsp;▸</span>
+            <span class="prompt">research focus&nbsp;▸</span>
             <span id="token-stream"></span><span class="cursor">.</span>
         </p>
         <p class="hero-sub">
             {% if profile.bio %}{{ profile.bio }}{% else %}{{ profile.role|default:"LLM Researcher" }}{% if profile.location %} based in {{ profile.location }}{% endif %}. I work on language models — how they reason, what they know, and how to make them more reliable.{% endif %}
         </p>
         <div class="hero-cta">
-            <a class="btn btn-primary" href="{{ profile.cv_url }}" target="_blank" rel="noopener">Download CV</a>
-            <a class="btn btn-ghost" href="{% url 'portfolio:publications' %}">View publications</a>
+            <a class="btn btn-primary" href="{{ profile.cv_url }}" target="_blank" rel="noopener" data-magnetic><span>Download CV</span></a>
+            <a class="btn btn-ghost" href="{% url 'portfolio:publications' %}" data-magnetic>View publications</a>
         </div>
         <div class="socials">
             {% for label, url, icon in profile.socials %}
@@ -33,55 +37,39 @@
 </section>
 
 {% if agent_pipeline %}
-    {% include 'portfolio/_agent_pipeline.html' %}
+    {% include 'portfolio/_agent_pipeline_h.html' %}
 {% endif %}
 
 {% if publications %}
 <section class="section tight">
-    <div class="section-head reveal head-row">
+    <div class="section-head head-row">
         <div>
-            <p class="eyebrow">Selected work</p>
-            <h2>Featured publications</h2>
+            <p class="eyebrow reveal">Selected work</p>
+            <h2 data-morph>Featured publications</h2>
         </div>
-        <a class="section-link" href="{% url 'portfolio:publications' %}">All publications →</a>
+        <a class="section-link reveal" href="{% url 'portfolio:publications' %}">All publications →</a>
     </div>
+    <div class="pub-list">
     {% for pub in publications %}
         {% include 'portfolio/_publication.html' with pub=pub index=forloop.counter %}
     {% endfor %}
-</section>
-{% endif %}
-
-{% if news %}
-<section class="section tight">
-    <div class="section-head reveal">
-        <p class="eyebrow">Updates</p>
-        <h2>News</h2>
-    </div>
-    <div class="news-list reveal">
-        {% for item in news %}
-        <div class="news-item">
-            <div class="news-date">{{ item.date|date:"M Y" }}</div>
-            <div class="news-content">
-                {% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.content }}</a>{% else %}{{ item.content }}{% endif %}
-            </div>
-        </div>
-        {% endfor %}
     </div>
 </section>
 {% endif %}
 
 {% if experiences %}
 <section class="section tight">
-    <div class="section-head reveal">
-        <p class="eyebrow">Path</p>
-        <h2>Experience</h2>
+    <div class="section-head">
+        <p class="eyebrow reveal">Path</p>
+        <h2 data-morph>Experience</h2>
     </div>
     <div class="timeline reveal">
         {% for exp in experiences %}
         <div class="exp">
             <div class="exp-head">
                 <span class="exp-company">{{ exp.company_name }}</span>
-                <span class="exp-date">{{ exp.start_date }}{% if exp.end_date %} – {{ exp.end_date }}{% endif %}</span>
+                {% if not exp.end_date %}<span class="exp-now">Present</span>{% endif %}
+                <span class="exp-date">{{ exp.start_date }} — {% if exp.end_date %}{{ exp.end_date }}{% else %}now{% endif %}</span>
             </div>
             <div class="exp-title">{{ exp.job_title }}{% if exp.location %} · {{ exp.location }}{% endif %}</div>
             <p class="exp-desc">{{ exp.job_description }}</p>
@@ -90,8 +78,23 @@
     </div>
 </section>
 {% endif %}
-{% endblock %}
 
-{% block js %}
-<script src="{% static 'portfolio/js/hero.js' %}"></script>
+{% if news %}
+<section class="section tight">
+    <div class="section-head">
+        <p class="eyebrow reveal">Updates</p>
+        <h2 data-morph>News</h2>
+    </div>
+    <div class="news-list reveal">
+        {% for item in news %}
+        <div class="news-item">
+            <span class="news-date">{{ item.date|date:"M Y" }}</span>
+            <span class="news-content">
+                {% if item.url %}<a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.content }}</a>{% else %}{{ item.content }}{% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
 {% endblock %}
