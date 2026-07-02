@@ -865,7 +865,31 @@ textarea.field { min-height: 140px; resize: vertical; }
 }
 .ebc-day-head h2 { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.3rem, 2.6vw, 1.9rem); margin: 0; }
 
-/* the chat flow */
+/* parallel columns — the two candidates act side by side within a day */
+.ebc-mid { display: flex; flex-direction: column; align-items: center; gap: .7rem; margin-bottom: 1rem; }
+.ebc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; align-items: start; }
+.ebc-col { display: flex; flex-direction: column; gap: .9rem; min-width: 0; }
+.ebc-col-head {
+    display: flex; align-items: baseline; gap: .7rem; padding: .45rem .2rem;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: .74rem; letter-spacing: .04em;
+    position: sticky; top: 3.6rem; background: rgba(6, 5, 16, .82);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 5;
+}
+.ebc-col-head .ebc-name { font-weight: 600; }
+.col-a .ebc-col-head .ebc-name { color: var(--accent); }
+.col-b .ebc-col-head .ebc-name { color: var(--ember); }
+.ebc-col .ebc-bubble, .ebc-col .ebc-event { max-width: 100%; width: 100%; }
+.col-a > .ebc-bubble { border-left: 3px solid var(--accent); border-top-left-radius: 4px;
+    background: linear-gradient(90deg, rgba(139, 124, 255, .07), rgba(13, 11, 26, .7) 45%); }
+.col-b > .ebc-bubble { border-left: 3px solid var(--ember); border-top-left-radius: 4px;
+    background: linear-gradient(90deg, rgba(255, 92, 56, .07), rgba(13, 11, 26, .7) 45%); }
+.col-a > .ebc-event { border-left: 2px solid rgba(139, 124, 255, .5); }
+.col-b > .ebc-event { border-left: 2px solid rgba(255, 92, 56, .5); }
+.col-b .ebc-action::before { color: var(--ember); }
+.col-b .ebc-name { color: var(--ember); }
+
+/* the chat flow (final debate) */
 .ebc-chat { display: flex; flex-direction: column; gap: .9rem; }
 .ebc-msg { display: flex; }
 .ebc-msg.side-a { justify-content: flex-start; }
@@ -948,6 +972,10 @@ textarea.field { min-height: 140px; resize: vertical; }
 .ebc-stat i.a { background: var(--accent); }
 .ebc-stat i.b { background: var(--ember); }
 
+@media (max-width: 900px) {
+    .ebc-cols { grid-template-columns: 1fr; }
+    .ebc-col-head { position: static; }
+}
 @media (max-width: 720px) {
     .ebc-bubble, .ebc-event { max-width: 100%; }
     .ebc-topbar { flex-direction: column; gap: .5rem; }

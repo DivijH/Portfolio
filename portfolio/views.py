@@ -381,11 +381,23 @@ def _build_game_chat(g):
     # marker, so a call's own "=== Day N of M ===" prompt header is the
     # authoritative day; the running marker is only the fallback (and is
     # what events/env attach to).
+    # Within a day the two candidates act in parallel, so each day renders
+    # as two side-by-side columns (col_a / col_b); slotless items go to
+    # `mid`. Only the debate is a genuine exchange — it stays sequential.
     sections = {}
     def section(n):
         if n not in sections:
-            sections[n] = {'n': n, 'items': [], 'debate': [], 'env': '', 'env_stats': None}
+            sections[n] = {'n': n, 'col_a': [], 'col_b': [], 'mid': [],
+                           'debate': [], 'env': '', 'env_stats': None}
         return sections[n]
+
+    def place(cur, slot, entry):
+        if slot == 'A':
+            cur['col_a'].append(entry)
+        elif slot == 'B':
+            cur['col_b'].append(entry)
+        else:
+            cur['mid'].append(entry)
 
     cur_n = None
     systems = {}          # slot -> system prompt (shown once, in the header)
@@ -422,17 +434,22 @@ def _build_game_chat(g):
                 systems[slot] = it['system'].strip()
             if not state_sizes:
                 state_sizes = _STATE_RE.findall(prompt)
-            (cur['debate'] if it.get('tag') == 'debate' else cur['items']).append(entry)
+            if it.get('tag') == 'debate':
+                cur['debate'].append(entry)
+            else:
+                place(cur, slot, entry)
         elif t == 'action':
             cur = section(cur_n or 1)
             entry = {
                 'kind': 'event', 'event_kind': it.get('kind', ''),
                 'slot': it.get('slot') or '', 'text': (it.get('text') or '').strip(),
             }
-            target = cur['debate'] if 'debate' in (it.get('kind') or '') else cur['items']
-            target.append(entry)
+            if 'debate' in (it.get('kind') or ''):
+                cur['debate'].append(entry)
+            else:
+                place(cur, entry['slot'], entry)
         elif t == 'other_call':
-            section(cur_n or 1)['items'].append({
+            section(cur_n or 1)['mid'].append({
                 'kind': 'other', 'tag': it.get('tag', ''), 'model': it.get('model', ''),
                 'prompt': (it.get('prompt') or '').strip(),
                 'response': (it.get('response') or '').strip(),

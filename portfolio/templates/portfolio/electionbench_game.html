@@ -71,51 +71,24 @@
             <h2>Day {{ d.n }} <span class="ebc-dim">of {{ s.n_days }}</span></h2>
         </header>
 
-        <div class="ebc-chat">
-            {% for it in d.items %}
-                {% if it.kind == 'call' %}
-                <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
-                    <div class="ebc-bubble">
-                        <div class="ebc-who">
-                            <span class="ebc-name">{{ it.model }}</span>
-                            {% if it.slot %}<span class="ebc-slot">slot {{ it.slot }}</span>{% endif %}
-                            <span class="eb-tag">{{ it.tag }}</span>
-                        </div>
-                        {% if it.thinking %}
-                        <details class="ebc-think"><summary>thinking</summary><pre>{{ it.thinking }}</pre></details>
-                        {% endif %}
-                        {% if it.deliberation %}
-                        <details class="ebc-think"><summary>deliberation</summary><pre>{{ it.deliberation }}</pre></details>
-                        {% endif %}
-                        {% if it.prose %}<div class="ebc-prose">{{ it.prose|linebreaksbr }}</div>{% endif %}
-                        {% if it.action %}<pre class="ebc-action">{{ it.action }}</pre>{% endif %}
-                        {% if it.prompt %}
-                        <details class="ebc-prompt"><summary>prompt</summary><pre>{{ it.prompt }}</pre></details>
-                        {% endif %}
-                    </div>
-                </div>
-                {% elif it.kind == 'event' %}
-                <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
-                    <div class="ebc-event">
-                        <span class="ebc-event-kind">{{ it.event_kind }}{% if it.slot %} · {{ it.slot }}{% endif %}</span>
-                        {% if it.text|length > 260 %}
-                        <details><summary>{{ it.text|truncatechars:180 }}</summary>
-                            <div class="ebc-event-text">{{ it.text|linebreaksbr }}</div></details>
-                        {% else %}
-                        <div class="ebc-event-text">{{ it.text|linebreaksbr }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% elif it.kind == 'other' %}
-                <div class="ebc-msg side-mid">
-                    <details class="ebc-other"><summary>{{ it.tag }} call · {{ it.model }}</summary>
-                        <div class="eb-io-label">prompt</div><pre class="eb-io">{{ it.prompt }}</pre>
-                        <div class="eb-io-label">response</div><pre class="eb-io resp">{{ it.response }}</pre>
-                    </details>
-                </div>
-                {% endif %}
-            {% endfor %}
+        {% if d.mid %}
+        <div class="ebc-mid">
+            {% for it in d.mid %}{% include 'portfolio/_eb_msg.html' with show_who=True %}{% endfor %}
         </div>
+        {% endif %}
+
+        {% if d.col_a or d.col_b %}
+        <div class="ebc-cols">
+            <div class="ebc-col col-a">
+                <div class="ebc-col-head"><span class="ebc-name">{{ s.candidate_a }}</span><span class="ebc-slot">slot A</span></div>
+                {% for it in d.col_a %}{% include 'portfolio/_eb_msg.html' %}{% endfor %}
+            </div>
+            <div class="ebc-col col-b">
+                <div class="ebc-col-head"><span class="ebc-name">{{ s.candidate_b }}</span><span class="ebc-slot">slot B</span></div>
+                {% for it in d.col_b %}{% include 'portfolio/_eb_msg.html' %}{% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         {% if d.debate %}
         <div class="ebc-debate">
@@ -125,35 +98,9 @@
             </header>
             <div class="ebc-chat">
                 {% for it in d.debate %}
-                    {% if it.kind == 'call' %}
-                    <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
-                        <div class="ebc-bubble">
-                            <div class="ebc-who">
-                                <span class="ebc-name">{{ it.model }}</span>
-                                {% if it.slot %}<span class="ebc-slot">slot {{ it.slot }}</span>{% endif %}
-                                <span class="eb-tag">debate</span>
-                            </div>
-                            {% if it.thinking %}
-                            <details class="ebc-think"><summary>thinking</summary><pre>{{ it.thinking }}</pre></details>
-                            {% endif %}
-                            {% if it.deliberation %}
-                            <details class="ebc-think"><summary>deliberation</summary><pre>{{ it.deliberation }}</pre></details>
-                            {% endif %}
-                            {% if it.prose %}<div class="ebc-prose">{{ it.prose|linebreaksbr }}</div>{% endif %}
-                            {% if it.action %}<pre class="ebc-action">{{ it.action }}</pre>{% endif %}
-                            {% if it.prompt %}
-                            <details class="ebc-prompt"><summary>prompt</summary><pre>{{ it.prompt }}</pre></details>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% elif it.kind == 'event' %}
-                    <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
-                        <div class="ebc-event debate">
-                            <span class="ebc-event-kind">{{ it.event_kind }}{% if it.slot %} · {{ it.slot }}{% endif %}</span>
-                            <div class="ebc-event-text">{{ it.text|linebreaksbr }}</div>
-                        </div>
-                    </div>
-                    {% endif %}
+                <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
+                    {% include 'portfolio/_eb_msg.html' with show_who=True %}
+                </div>
                 {% endfor %}
             </div>
         </div>
