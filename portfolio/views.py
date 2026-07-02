@@ -235,8 +235,8 @@ def electionbench_h2h(request):
         return JsonResponse({'ok': False, 'error': 'locked'}, status=403)
     a = request.GET.get('a', '').strip()
     b = request.GET.get('b', '').strip()
-    if not a or not b or a == b:
-        return JsonResponse({'ok': False, 'error': 'pick two different models'}, status=400)
+    if not a or not b:
+        return JsonResponse({'ok': False, 'error': 'pick two models'}, status=400)
     from django.db.models import Q
     games = list(models.Game.objects.filter(
         Q(model_a=a, model_b=b) | Q(model_a=b, model_b=a)).order_by('seed', 'game_idx'))
