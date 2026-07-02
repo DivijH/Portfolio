@@ -8,6 +8,7 @@
 {% block content %}
 <section class="section" style="padding-top:2.4rem">
     <a class="section-link" href="{% url 'portfolio:electionbench' %}">← ElectionBench</a>
+    <a class="section-link" href="{% url 'portfolio:electionbench_game_full' g.id %}" target="_blank" rel="noopener" style="float:right">Full raw log ↗</a>
 
     {% with s=detail.setup %}
     <h1 class="eb-game-title">
@@ -38,7 +39,7 @@
     {% endwith %}
 
     {% if detail.timeline %}
-    <p class="eb-hint" style="margin:1.6rem 0 .6rem">Candidate model calls are expanded; voter/donor calls are collapsed — click to open.</p>
+    <p class="eb-hint" style="margin:1.6rem 0 .6rem">Candidate model calls — prompt → reasoning + action. Voter/donor calls are in the <a href="{% url 'portfolio:electionbench_game_full' g.id %}" target="_blank" rel="noopener">full raw log ↗</a>.</p>
     <div class="eb-timeline">
         {% for it in detail.timeline %}
             {% if it.t == 'day' %}

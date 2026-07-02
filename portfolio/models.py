@@ -336,6 +336,7 @@ class Game(models.Model):
     turnout = models.FloatField(null=True, blank=True)
     transcript = models.TextField(blank=True)
     detail = models.JSONField(default=dict, blank=True)  # {setup, timeline} for the full-page view
+    raw_log = models.TextField(blank=True)               # complete event log for the "full log" link
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

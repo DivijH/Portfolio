@@ -210,6 +210,7 @@ def electionbench_ingest(request):
                 'turnout': g.get('turnout'),
                 'transcript': g.get('transcript') or '',
                 'detail': g.get('detail') or {},
+                'raw_log': g.get('raw_log') or '',
             })
             n += 1
         return JsonResponse({'ok': True, 'games_upserted': n})
@@ -279,3 +280,17 @@ def electionbench_game(request, game_id):
     except models.Game.DoesNotExist:
         raise Http404()
     return render(request, 'portfolio/electionbench_game.html', {'g': g, 'detail': g.detail or None})
+
+
+def electionbench_game_full(request, game_id):
+    """Session-gated plain-text dump of a game's complete event log (the 'full log' link)."""
+    if not settings.ELECTIONBENCH_PASSWORD:
+        raise Http404()
+    if not request.session.get('eb_ok'):
+        return redirect('portfolio:electionbench')
+    try:
+        g = models.Game.objects.get(pk=game_id)
+    except models.Game.DoesNotExist:
+        raise Http404()
+    return HttpResponse(g.raw_log or g.transcript or '(no log)',
+                        content_type='text/plain; charset=utf-8')
