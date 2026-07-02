@@ -59,12 +59,18 @@
     function renderH2H(d) {
         if (!d.ok) { h2hBox.innerHTML = '<p class="eb-note">' + (d.error || 'error') + '</p>'; return; }
         var A = strip(d.a), B = strip(d.b);
-        if (!d.n) { h2hBox.innerHTML = '<div class="empty-state">No recorded games between ' + A + ' and ' + B + '.</div>'; return; }
+        var labA = d.selfplay ? A + ' (slot A)' : A;
+        var labB = d.selfplay ? A + ' (slot B)' : B;
+        if (!d.n) {
+            h2hBox.innerHTML = '<div class="empty-state">No recorded games ' +
+                (d.selfplay ? 'of ' + A + ' against itself.' : 'between ' + A + ' and ' + B + '.') + '</div>';
+            return;
+        }
         var summary = '<div class="eb-h2h-summary">' +
-            '<span class="eb-score"><strong>' + A + '</strong> ' + d.a_wins + ' – ' + d.b_wins + ' <strong>' + B + '</strong></span>' +
-            '<span class="eb-h2h-meta">' + d.n + ' games · ' + A + ' win ' + d.a_win_pct + '%' +
+            '<span class="eb-score"><strong>' + labA + '</strong> ' + d.a_wins + ' – ' + d.b_wins + ' <strong>' + labB + '</strong></span>' +
+            '<span class="eb-h2h-meta">' + d.n + (d.selfplay ? ' self-play games · slot A win ' : ' games · ' + A + ' win ') + d.a_win_pct + '%' +
             (d.draws ? ' · ' + d.draws + ' draw' + (d.draws > 1 ? 's' : '') : '') +
-            ' · avg margin ' + fmtMargin(d.avg_margin_a) + ' toward ' + A + '</span></div>';
+            ' · avg margin ' + fmtMargin(d.avg_margin_a) + ' toward ' + (d.selfplay ? 'slot A' : A) + '</span></div>';
         var rows = d.games.map(function (g) {
             var w = g.winner === 'draw' ? 'draw' : strip(g.winner);
             return '<tr>' +
@@ -76,13 +82,14 @@
         }).join('');
         h2hBox.innerHTML = summary +
             '<div class="eb-table-wrap" style="margin-top:1rem"><table class="eb-table eb-games">' +
-            '<thead><tr><th>Seed/mirror</th><th>Winner</th><th>Margin→' + A + '</th><th>States ' + A + '–' + B + '</th><th></th></tr></thead>' +
+            '<thead><tr><th>Seed/mirror</th><th>Winner</th><th>Margin→' + (d.selfplay ? 'slot A' : A) + '</th><th>States ' +
+            (d.selfplay ? 'A–B' : A + '–' + B) + '</th><th></th></tr></thead>' +
             '<tbody>' + rows + '</tbody></table></div>';
     }
 
     function fetchH2H() {
         var a = selA.value, b = selB.value;
-        if (!a || !b || a === b) { h2hBox.innerHTML = '<p class="eb-note">Pick two different models.</p>'; return; }
+        if (!a || !b) { h2hBox.innerHTML = '<p class="eb-note">Pick two models (the same model twice shows self-play games).</p>'; return; }
         h2hBox.innerHTML = '<p class="eb-note">Loading…</p>';
         fetch('/electionbench/h2h/?a=' + encodeURIComponent(a) + '&b=' + encodeURIComponent(b),
               { credentials: 'same-origin' })

@@ -1,77 +1,186 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ g.model_a }} vs {{ g.model_b }} · seed {{ g.seed }} — ElectionBench{% endblock %}
+{% block title %}{{ g.model_a|cut:"cand_" }} vs {{ g.model_b|cut:"cand_" }} · seed {{ g.seed }} — ElectionBench{% endblock %}
 {% block meta_description %}ElectionBench game.{% endblock %}
 {% block extra_head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
 {% block content %}
 <section class="section" style="padding-top:2.4rem">
-    <a class="section-link" href="{% url 'portfolio:electionbench' %}">← ElectionBench</a>
-    <a class="section-link" href="{% url 'portfolio:electionbench_game_full' g.id %}" target="_blank" rel="noopener" style="float:right">Full raw log ↗</a>
+    <div class="ebc-topbar">
+        <a class="section-link" href="{% url 'portfolio:electionbench' %}">← ElectionBench</a>
+        <a class="section-link" href="{% url 'portfolio:electionbench_game_full' g.id %}" target="_blank" rel="noopener">Full raw log ↗</a>
+    </div>
 
-    {% with s=detail.setup %}
-    <h1 class="eb-game-title">
-        {% if s %}{{ s.candidate_a }}{% else %}{{ g.model_a }}{% endif %}
-        <span class="eb-vs">vs</span>
-        {% if s %}{{ s.candidate_b }}{% else %}{{ g.model_b }}{% endif %}
+    {% if chat %}
+    {% with s=chat.setup %}
+    <h1 class="ebc-title">
+        <span class="ebc-cand-a">{{ s.candidate_a|default:g.model_a|cut:"cand_" }}</span>
+        <span class="ebc-vs">vs</span>
+        <span class="ebc-cand-b">{{ s.candidate_b|default:g.model_b|cut:"cand_" }}</span>
     </h1>
-
-    {% if s %}
-    <p class="eb-note" style="margin-top:.4rem">
-        Winner <strong>{{ s.winner }}</strong> · states {{ s.states_a }}–{{ s.states_b }} ·
-        popular margin {{ s.popular_margin_a }} · turnout {{ s.turnout }}
+    <p class="ebc-sub">
+        {{ s.party_a }} <span class="ebc-dim">/</span> {{ s.party_b }}
+        <span class="ebc-dim">· seed {{ s.world_seed|default:g.seed }} · mirror {{ g.game_idx }}</span>
     </p>
 
-    <div class="eb-setup">
-        <div><span class="k">Parties</span><span class="v">{{ s.party_a }} <em>/</em> {{ s.party_b }}</span></div>
-        <div><span class="k">World seed</span><span class="v">{{ s.world_seed }} · opener {{ s.opener }}</span></div>
+    <div class="ebc-result reveal">
+        {% if s.winner %}<span class="chip accent">Winner: {{ s.winner }}</span>{% endif %}
+        <span class="chip">States {{ s.states_a }}–{{ s.states_b }}</span>
+        {% if s.popular_margin_a is not None %}<span class="chip">Popular margin (A) {{ s.popular_margin_a }}</span>{% endif %}
+        {% if s.turnout %}<span class="chip">Turnout {{ s.turnout }}</span>{% endif %}
+    </div>
+
+    {# ---- game setup / hyperparameters ---- #}
+    <div class="eb-setup reveal">
         <div><span class="k">States</span><span class="v">{{ s.n_states }}</span></div>
         <div><span class="k">Campaign</span><span class="v">{{ s.n_days }} days × {{ s.actions_per_day }} actions</span></div>
         <div><span class="k">Start budget</span><span class="v">{{ s.start_budget }}</span></div>
         <div><span class="k">Voters / state</span><span class="v">{{ s.hyperparams.voters_per_state_range|join:"–" }}</span></div>
-        <div><span class="k">Voter LLMs</span><span class="v">{{ s.voter_models|join:", " }}</span></div>
-        <div><span class="k">Donor LLMs</span><span class="v">{{ s.donor_models|join:", " }}</span></div>
-        <div><span class="k">Demographics</span><span class="v">{{ s.demographics|join:", " }}</span></div>
         <div><span class="k">Lean strength</span><span class="v">{{ s.hyperparams.lean_strength }}</span></div>
+        <div><span class="k">Perception</span><span class="v">{{ s.hyperparams.perception_backend|default:"—" }}</span></div>
+        <div><span class="k">Donor backend</span><span class="v">{{ s.hyperparams.donor_backend|default:"—" }}</span></div>
+        <div><span class="k">Opener</span><span class="v">{{ s.opener|default:"—" }}</span></div>
+        {% if chat.state_sizes %}
+        <div class="ebc-span"><span class="k">State sizes</span>
+            <span class="v">{% for st in chat.state_sizes %}{{ st.state }} · {{ st.voters }}{% if not forloop.last %} &nbsp;|&nbsp; {% endif %}{% endfor %}</span></div>
+        {% endif %}
+        <div class="ebc-span"><span class="k">Voter LLMs</span><span class="v">{{ s.voter_models|join:", " }}</span></div>
+        <div class="ebc-span"><span class="k">Donor LLMs</span><span class="v">{{ s.donor_models|join:", " }}</span></div>
+        <div class="ebc-span"><span class="k">Demographics</span><span class="v">{{ s.demographics|join:", " }}</span></div>
+    </div>
+
+    {% if chat.systems %}
+    <div class="ebc-systems reveal">
+        {% if chat.systems.A %}
+        <details class="ebc-sys a"><summary>System prompt — <strong>{{ s.candidate_a }}</strong> (A)</summary>
+            <pre>{{ chat.systems.A }}</pre></details>
+        {% endif %}
+        {% if chat.systems.B %}
+        <details class="ebc-sys b"><summary>System prompt — <strong>{{ s.candidate_b }}</strong> (B)</summary>
+            <pre>{{ chat.systems.B }}</pre></details>
+        {% endif %}
     </div>
     {% endif %}
-    {% endwith %}
 
-    {% if detail.timeline %}
-    <p class="eb-hint" style="margin:1.6rem 0 .6rem">Candidate model calls — prompt → reasoning + action. Voter/donor calls are in the <a href="{% url 'portfolio:electionbench_game_full' g.id %}" target="_blank" rel="noopener">full raw log ↗</a>.</p>
-    <div class="eb-timeline">
-        {% for it in detail.timeline %}
-            {% if it.t == 'day' %}
-                <h3 class="eb-tl-day">Day {{ it.day }}</h3>
-            {% elif it.t == 'cand_call' %}
-                <details class="eb-call cand" open>
-                    <summary><span class="eb-call-kind">model call</span> {{ it.model }} <span class="eb-tag">{{ it.tag }}</span></summary>
-                    <div class="eb-call-body">
-                        <div class="eb-io-label">prompt given to the model</div>
-                        <pre class="eb-io">{{ it.prompt }}</pre>
-                        <div class="eb-io-label">model response — reasoning + action</div>
-                        <pre class="eb-io resp">{{ it.response }}</pre>
+    {# ---- the campaign, day by day ---- #}
+    {% for d in chat.days %}
+    <section class="ebc-day">
+        <header class="ebc-day-head">
+            <span class="ebc-day-num" aria-hidden="true">{{ d.n|stringformat:"02d" }}</span>
+            <h2>Day {{ d.n }} <span class="ebc-dim">of {{ s.n_days }}</span></h2>
+        </header>
+
+        <div class="ebc-chat">
+            {% for it in d.items %}
+                {% if it.kind == 'call' %}
+                <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
+                    <div class="ebc-bubble">
+                        <div class="ebc-who">
+                            <span class="ebc-name">{{ it.model }}</span>
+                            {% if it.slot %}<span class="ebc-slot">slot {{ it.slot }}</span>{% endif %}
+                            <span class="eb-tag">{{ it.tag }}</span>
+                        </div>
+                        {% if it.thinking %}
+                        <details class="ebc-think"><summary>thinking</summary><pre>{{ it.thinking }}</pre></details>
+                        {% endif %}
+                        {% if it.deliberation %}
+                        <details class="ebc-think"><summary>deliberation</summary><pre>{{ it.deliberation }}</pre></details>
+                        {% endif %}
+                        {% if it.prose %}<div class="ebc-prose">{{ it.prose|linebreaksbr }}</div>{% endif %}
+                        {% if it.action %}<pre class="ebc-action">{{ it.action }}</pre>{% endif %}
+                        {% if it.prompt %}
+                        <details class="ebc-prompt"><summary>prompt</summary><pre>{{ it.prompt }}</pre></details>
+                        {% endif %}
                     </div>
-                </details>
-            {% elif it.t == 'other_call' %}
-                <details class="eb-call other">
-                    <summary><span class="eb-tag">{{ it.tag }}</span> call · {{ it.model }}</summary>
-                    <div class="eb-call-body">
+                </div>
+                {% elif it.kind == 'event' %}
+                <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
+                    <div class="ebc-event">
+                        <span class="ebc-event-kind">{{ it.event_kind }}{% if it.slot %} · {{ it.slot }}{% endif %}</span>
+                        {% if it.text|length > 260 %}
+                        <details><summary>{{ it.text|truncatechars:180 }}</summary>
+                            <div class="ebc-event-text">{{ it.text|linebreaksbr }}</div></details>
+                        {% else %}
+                        <div class="ebc-event-text">{{ it.text|linebreaksbr }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% elif it.kind == 'other' %}
+                <div class="ebc-msg side-mid">
+                    <details class="ebc-other"><summary>{{ it.tag }} call · {{ it.model }}</summary>
                         <div class="eb-io-label">prompt</div><pre class="eb-io">{{ it.prompt }}</pre>
                         <div class="eb-io-label">response</div><pre class="eb-io resp">{{ it.response }}</pre>
+                    </details>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if d.debate %}
+        <div class="ebc-debate">
+            <header class="ebc-debate-head">
+                <h3>Final debate</h3>
+                <p class="ebc-dim">Live exchange between the two candidates, moderated by the environment.</p>
+            </header>
+            <div class="ebc-chat">
+                {% for it in d.debate %}
+                    {% if it.kind == 'call' %}
+                    <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
+                        <div class="ebc-bubble">
+                            <div class="ebc-who">
+                                <span class="ebc-name">{{ it.model }}</span>
+                                {% if it.slot %}<span class="ebc-slot">slot {{ it.slot }}</span>{% endif %}
+                                <span class="eb-tag">debate</span>
+                            </div>
+                            {% if it.thinking %}
+                            <details class="ebc-think"><summary>thinking</summary><pre>{{ it.thinking }}</pre></details>
+                            {% endif %}
+                            {% if it.deliberation %}
+                            <details class="ebc-think"><summary>deliberation</summary><pre>{{ it.deliberation }}</pre></details>
+                            {% endif %}
+                            {% if it.prose %}<div class="ebc-prose">{{ it.prose|linebreaksbr }}</div>{% endif %}
+                            {% if it.action %}<pre class="ebc-action">{{ it.action }}</pre>{% endif %}
+                            {% if it.prompt %}
+                            <details class="ebc-prompt"><summary>prompt</summary><pre>{{ it.prompt }}</pre></details>
+                            {% endif %}
+                        </div>
                     </div>
-                </details>
-            {% elif it.t == 'action' %}
-                <div class="eb-tl-action">{{ it.text|linebreaksbr }}</div>
-            {% elif it.t == 'env' %}
-                <div class="eb-tl-env">{{ it.text }}</div>
-            {% endif %}
-        {% endfor %}
-    </div>
+                    {% elif it.kind == 'event' %}
+                    <div class="ebc-msg {% if it.slot == 'A' %}side-a{% elif it.slot == 'B' %}side-b{% else %}side-mid{% endif %}">
+                        <div class="ebc-event debate">
+                            <span class="ebc-event-kind">{{ it.event_kind }}{% if it.slot %} · {{ it.slot }}{% endif %}</span>
+                            <div class="ebc-event-text">{{ it.text|linebreaksbr }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if d.env_stats %}
+        <footer class="ebc-env">
+            <span class="ebc-env-label">end of day {{ d.n }}</span>
+            <span class="ebc-stat"><i class="a"></i>favorability {{ d.env_stats.fav_a }}</span>
+            <span class="ebc-stat"><i class="b"></i>favorability {{ d.env_stats.fav_b }}</span>
+            <span class="ebc-stat"><i class="a"></i>budget {{ d.env_stats.bud_a }}</span>
+            <span class="ebc-stat"><i class="b"></i>budget {{ d.env_stats.bud_b }}</span>
+        </footer>
+        {% elif d.env %}
+        <footer class="ebc-env"><span class="ebc-env-label">{{ d.env }}</span></footer>
+        {% endif %}
+    </section>
+    {% endfor %}
+    {% endwith %}
+
     {% else %}
+    {# ---- fallback: games streamed without a structured detail ---- #}
+    <h1 class="eb-game-title">
+        {{ g.model_a|cut:"cand_" }} <span class="eb-vs">vs</span> {{ g.model_b|cut:"cand_" }}
+    </h1>
     <div class="eb-transcript-wrap" style="margin-top:1.6rem">
-        <pre class="eb-transcript">{{ g.transcript }}</pre>
+        <pre class="eb-transcript">{{ g.transcript|default:"(no transcript)" }}</pre>
     </div>
     {% endif %}
 </section>

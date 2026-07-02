@@ -1,5 +1,6 @@
 import hmac
 import json
+import re
 
 from django.conf import settings
 from django.contrib import messages
@@ -191,6 +192,11 @@ def electionbench_ingest(request):
     if not isinstance(payload, dict):
         return JsonResponse({'ok': False, 'error': 'expected a JSON object'}, status=400)
 
+    # Maintenance: wipe all games (e.g. before re-streaming a fresh run).
+    if payload.get('clear_games') is True:
+        deleted, _ = models.Game.objects.all().delete()
+        return JsonResponse({'ok': True, 'games_deleted': deleted})
+
     # Games batch (explorer data) — upsert by log_name.
     if isinstance(payload.get('games'), list):
         n = 0
@@ -213,7 +219,19 @@ def electionbench_ingest(request):
                 'raw_log': g.get('raw_log') or '',
             })
             n += 1
-        return JsonResponse({'ok': True, 'games_upserted': n})
+        deleted = 0
+        prefix = payload.get('games_keep_prefix')
+        if isinstance(prefix, str) and prefix:
+            # Full-run sync: games outside the current run's log prefix are
+            # stale leftovers from an earlier simulation — drop them.
+            deleted, _ = models.Game.objects.exclude(log_name__startswith=prefix[:200]).delete()
+        return JsonResponse({'ok': True, 'games_upserted': n, 'games_deleted': deleted})
+
+    # Standalone prefix purge (no batch): keep only the current run's games.
+    if isinstance(payload.get('games_keep_prefix'), str) and payload['games_keep_prefix']:
+        deleted, _ = models.Game.objects.exclude(
+            log_name__startswith=payload['games_keep_prefix'][:200]).delete()
+        return JsonResponse({'ok': True, 'games_deleted': deleted})
 
     # Leaderboard update.
     bench = models.ElectionBench.load()
@@ -231,7 +249,12 @@ def electionbench_ingest(request):
 
 
 def electionbench_h2h(request):
-    """Session-gated JSON: head-to-head record + game list for two models."""
+    """Session-gated JSON: head-to-head record + game list for two models.
+
+    Supports self-play (a == b): games are reported in slot orientation
+    (slot A vs slot B), with the slot holding more states counted as the
+    winner, since `winner_model` cannot distinguish the two sides.
+    """
     if not request.session.get('eb_ok'):
         return JsonResponse({'ok': False, 'error': 'locked'}, status=403)
     a = request.GET.get('a', '').strip()
@@ -241,36 +264,181 @@ def electionbench_h2h(request):
     from django.db.models import Q
     games = list(models.Game.objects.filter(
         Q(model_a=a, model_b=b) | Q(model_a=b, model_b=a)).order_by('seed', 'game_idx'))
+    selfplay = (a == b)
 
-    def margin_a(g):
-        if g.popular_margin is None:
-            return None
-        return g.popular_margin if g.model_a == a else -g.popular_margin
-
-    def states_of(g, model):
-        return g.states_a if model == g.model_a else g.states_b
+    def oriented(g):
+        """(margin toward a, a-side states, b-side states) in the caller's
+        (a, b) orientation. Self-play games are already in slot order."""
+        if selfplay or g.model_a == a:
+            return g.popular_margin, g.states_a, g.states_b
+        m = None if g.popular_margin is None else -g.popular_margin
+        return m, g.states_b, g.states_a
 
     n = len(games)
-    a_wins = sum(1 for g in games if g.winner_model == a)
-    b_wins = sum(1 for g in games if g.winner_model == b)
-    draws = sum(1 for g in games if not g.winner_model)
-    margins = [m for m in (margin_a(g) for g in games) if m is not None]
+    a_wins = b_wins = draws = 0
+    margins = []
+    rows = []
+    for g in games:
+        m, sa, sb = oriented(g)
+        if m is not None:
+            margins.append(m)
+        if not g.winner_model:
+            draws += 1
+            winner = 'draw'
+        elif selfplay:
+            slot_a_won = sa > sb or (sa == sb and (m or 0) > 0)
+            if slot_a_won:
+                a_wins += 1
+                winner = 'slot A'
+            else:
+                b_wins += 1
+                winner = 'slot B'
+        elif g.winner_model == a:
+            a_wins += 1
+            winner = g.winner_model
+        else:
+            b_wins += 1
+            winner = g.winner_model
+        rows.append({
+            'id': g.id, 'seed': g.seed, 'game_idx': g.game_idx,
+            'winner': winner, 'margin_a': m, 'states_a': sa, 'states_b': sb,
+            'turnout': g.turnout,
+        })
     return JsonResponse({
-        'ok': True, 'a': a, 'b': b, 'n': n,
+        'ok': True, 'a': a, 'b': b, 'n': n, 'selfplay': selfplay,
         'a_wins': a_wins, 'b_wins': b_wins, 'draws': draws,
         'a_win_pct': round(100 * a_wins / n, 1) if n else 0.0,
         'avg_margin_a': round(sum(margins) / len(margins), 4) if margins else None,
-        'games': [{
-            'id': g.id, 'seed': g.seed, 'game_idx': g.game_idx,
-            'winner': g.winner_model or 'draw',
-            'margin_a': margin_a(g), 'states_a': states_of(g, a), 'states_b': states_of(g, b),
-            'turnout': g.turnout,
-        } for g in games],
+        'games': rows,
     })
 
 
+# --- game-page chat parsing --------------------------------------------------
+
+_THINK_RE = re.compile(r'<think>(.*?)</think>', re.S | re.I)
+_FENCE_RE = re.compile(r'```[a-zA-Z]*\s*(.*?)```', re.S)
+_ENV_RE = re.compile(
+    r'favorability A ([\d.]+) / B ([\d.]+) · budget A ([\d.]+) / B ([\d.]+)')
+_STATE_RE = re.compile(r'\bS(\d+): (\d+) voters')
+
+
+_REASON_MARK = re.compile(r'(?im)^\s*reasoning\s*:')
+
+
+def _parse_llm_response(text):
+    """Split a candidate response into (thinking, deliberation, prose, action).
+
+    Responses are "brief reasoning, then ONE JSON action surrounded by ```".
+    Reasoning models wrap deliberation in <think> tags; verbose models think
+    out loud instead — for those, everything before the final "Reasoning:"
+    marker (or before the closing paragraph) is folded away as deliberation.
+    """
+    text = text or ''
+    thinking = '\n\n'.join(p.strip() for p in _THINK_RE.findall(text)).strip()
+    body = _THINK_RE.sub('', text)
+    # reasoning models sometimes emit a closing </think> with the opening tag
+    # stripped by the serving stack — everything before it is thinking too
+    low = body.lower()
+    if '</think>' in low:
+        cut = low.rfind('</think>')
+        head = re.sub(r'(?i)<think>', '', body[:cut]).strip()
+        thinking = (thinking + '\n\n' + head).strip() if thinking else head
+        body = body[cut + len('</think>'):]
+    fences = _FENCE_RE.findall(body)
+    action = fences[-1].strip() if fences else ''
+    prose = _FENCE_RE.sub('', body).strip()
+
+    deliberation = ''
+    if not thinking and len(prose) > 700:
+        marks = list(_REASON_MARK.finditer(prose))
+        if marks:
+            cut = marks[-1].start()
+            deliberation, prose = prose[:cut].strip(), prose[cut:].strip()
+        else:
+            parts = prose.split('\n\n')
+            if len(parts) > 1 and len(parts[-1]) < 800:
+                deliberation = '\n\n'.join(parts[:-1]).strip()
+                prose = parts[-1].strip()
+    return thinking, deliberation, prose, action
+
+
+def _build_game_chat(g):
+    """Shape a game's detail {setup, timeline} into per-day chat sections."""
+    detail = g.detail or {}
+    setup = detail.get('setup') or {}
+    timeline = detail.get('timeline') or []
+    if not timeline:
+        return None
+
+    slot_of = {}
+    if setup.get('candidate_a'):
+        slot_of[setup['candidate_a']] = 'A'
+    if setup.get('candidate_b') and setup.get('candidate_b') != setup.get('candidate_a'):
+        slot_of[setup['candidate_b']] = 'B'
+
+    days = []
+    cur = None
+    systems = {}          # slot -> system prompt (shown once, in the header)
+    state_sizes = []
+
+    def day(n):
+        d = {'n': n, 'items': [], 'debate': [], 'env': '', 'env_stats': None}
+        days.append(d)
+        return d
+
+    for it in timeline:
+        t = it.get('t')
+        if t == 'day':
+            cur = day(it.get('day'))
+            continue
+        if cur is None:
+            cur = day(1)
+
+        if t == 'env':
+            cur['env'] = (it.get('text') or '').strip()
+            m = _ENV_RE.search(cur['env'])
+            if m:
+                cur['env_stats'] = {'fav_a': m.group(1), 'fav_b': m.group(2),
+                                    'bud_a': m.group(3), 'bud_b': m.group(4)}
+        elif t == 'cand_call':
+            thinking, deliberation, prose, action = _parse_llm_response(it.get('response'))
+            slot = slot_of.get(it.get('model'), '')
+            entry = {
+                'kind': 'call', 'tag': it.get('tag', ''), 'slot': slot,
+                'model': it.get('model', ''),
+                'thinking': thinking, 'deliberation': deliberation,
+                'prose': prose, 'action': action,
+                'prompt': (it.get('prompt') or '').strip(),
+            }
+            if slot and slot not in systems and (it.get('system') or '').strip():
+                systems[slot] = it['system'].strip()
+            if not state_sizes:
+                state_sizes = _STATE_RE.findall(it.get('prompt') or '')
+            (cur['debate'] if it.get('tag') == 'debate' else cur['items']).append(entry)
+        elif t == 'action':
+            entry = {
+                'kind': 'event', 'event_kind': it.get('kind', ''),
+                'slot': it.get('slot') or '', 'text': (it.get('text') or '').strip(),
+            }
+            target = cur['debate'] if 'debate' in (it.get('kind') or '') else cur['items']
+            target.append(entry)
+        elif t == 'other_call':
+            cur['items'].append({
+                'kind': 'other', 'tag': it.get('tag', ''), 'model': it.get('model', ''),
+                'prompt': (it.get('prompt') or '').strip(),
+                'response': (it.get('response') or '').strip(),
+            })
+
+    return {
+        'setup': setup,
+        'days': days,
+        'systems': systems,
+        'state_sizes': [{'state': 'S' + s, 'voters': v} for s, v in state_sizes],
+    }
+
+
 def electionbench_game(request, game_id):
-    """Session-gated full-page view of one game (setup + timeline, or the flat transcript)."""
+    """Session-gated full-page view of one game (chat-style days, or the flat transcript)."""
     if not settings.ELECTIONBENCH_PASSWORD:
         raise Http404()
     if not request.session.get('eb_ok'):
@@ -279,7 +447,9 @@ def electionbench_game(request, game_id):
         g = models.Game.objects.get(pk=game_id)
     except models.Game.DoesNotExist:
         raise Http404()
-    return render(request, 'portfolio/electionbench_game.html', {'g': g, 'detail': g.detail or None})
+    chat = _build_game_chat(g)
+    return render(request, 'portfolio/electionbench_game.html',
+                  {'g': g, 'chat': chat, 'setup': (chat or {}).get('setup')})
 
 
 def electionbench_game_full(request, game_id):

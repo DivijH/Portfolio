@@ -100,6 +100,23 @@ curl -X POST https://www.divijhanda.in/electionbench/ingest/ \
 > `Authorization` header unless `WSGIPassAuthorization On` is set. The page auto-refreshes
 > every ~10 min. Body fields: `columns` (list), `rows` (list of lists), optional `status`, `note`.
 
+**After restarting the simulation**, clear stale games — the streamer pushes incrementally
+and never deletes, so games from earlier runs linger in the head-to-head explorer:
+
+```bash
+# keep only the current run's games (safe with incremental pushes) …
+curl -X POST https://www.divijhanda.in/electionbench/ingest/ \
+  -H "X-Api-Token: $ELECTIONBENCH_TOKEN" -H "Content-Type: application/json" \
+  -d '{"games_keep_prefix": "runs/sweep/<current_run>/"}'
+
+# … or wipe all games and let the streamer re-push
+curl ... -d '{"clear_games": true}'
+```
+
+`games_keep_prefix` may also ride along with a `games` batch push. Games can additionally be
+deleted from the admin (**Games**). Selecting the same model in both explorer dropdowns shows
+self-play games, reported by slot (slot A vs slot B).
+
 ## Deployment notes
 - Set a real `SECRET_KEY` and `DEBUG=False`. With `DEBUG=False`, production hardening
   turns on automatically: HTTPS redirect, HSTS, secure session/CSRF cookies, and the
