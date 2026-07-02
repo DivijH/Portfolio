@@ -324,30 +324,64 @@ _STATE_RE = re.compile(r'\bS(\d+): (\d+) voters')
 
 _REASON_MARK = re.compile(r'(?im)^\s*reasoning\s*:')
 _PROMPT_DAY_RE = re.compile(r'===\s*Day\s+(\d+)\s+of\b')
+_TOOL_RE = re.compile(r'^\s*\[tool_call\]\s*([A-Za-z0-9_.\-]+)\((.*)\)\s*$', re.M)
+
+
+def _fmt_tool_args(raw):
+    """Render a tool call's JSON arguments as readable key: value lines."""
+    raw = (raw or '').strip()
+    if not raw:
+        return ''
+    try:
+        args = json.loads(raw)
+    except ValueError:
+        return raw
+    if not isinstance(args, dict):
+        return json.dumps(args, indent=2, ensure_ascii=False)
+    lines = []
+    for k, v in args.items():
+        if isinstance(v, (dict, list)):
+            lines.append('%s: %s' % (k, json.dumps(v, indent=2, ensure_ascii=False)))
+        else:
+            lines.append('%s: %s' % (k, v))
+    return '\n'.join(lines)
 
 
 def _parse_llm_response(text):
-    """Split a candidate response into (thinking, deliberation, prose, action).
+    """Split a candidate response into (thinking, deliberation, prose, action, tools).
 
-    Responses are "brief reasoning, then ONE JSON action surrounded by ```".
-    Reasoning models wrap deliberation in <think> tags; verbose models think
-    out loud instead — for those, everything before the final "Reasoning:"
-    marker (or before the closing paragraph) is folded away as deliberation.
+    Current sims use tool calling — the streamer serializes each call as a
+    "[tool_call] name({json args})" line. Older runs replied with a JSON
+    action in ``` fences instead. Reasoning models wrap thinking in <think>
+    tags (sometimes with the opening tag stripped by the serving stack);
+    non-reasoning models simply have no thinking. Verbose models that think
+    out loud in plain prose get that preamble folded away as deliberation.
     """
     text = text or ''
     thinking = '\n\n'.join(p.strip() for p in _THINK_RE.findall(text)).strip()
     body = _THINK_RE.sub('', text)
-    # reasoning models sometimes emit a closing </think> with the opening tag
-    # stripped by the serving stack — everything before it is thinking too
     low = body.lower()
     if '</think>' in low:
         cut = low.rfind('</think>')
         head = re.sub(r'(?i)<think>', '', body[:cut]).strip()
         thinking = (thinking + '\n\n' + head).strip() if thinking else head
         body = body[cut + len('</think>'):]
-    fences = _FENCE_RE.findall(body)
-    action = fences[-1].strip() if fences else ''
+
+    tools = [{'name': m.group(1), 'args': _fmt_tool_args(m.group(2))}
+             for m in _TOOL_RE.finditer(body)]
+    body = _TOOL_RE.sub('', body)
+
+    action = ''
+    if not tools:  # legacy fenced-JSON actions
+        fences = _FENCE_RE.findall(body)
+        action = fences[-1].strip() if fences else ''
     prose = _FENCE_RE.sub('', body).strip()
+    if not tools and not action:
+        # legacy models occasionally skipped the fences entirely
+        m = re.search(r'(?s)(\{\s*"action".*\})\s*$', prose)
+        if m:
+            action = m.group(1).strip()
+            prose = prose[:m.start()].strip()
 
     deliberation = ''
     if not thinking and len(prose) > 700:
@@ -360,7 +394,7 @@ def _parse_llm_response(text):
             if len(parts) > 1 and len(parts[-1]) < 800:
                 deliberation = '\n\n'.join(parts[:-1]).strip()
                 prose = parts[-1].strip()
-    return thinking, deliberation, prose, action
+    return thinking, deliberation, prose, action, tools
 
 
 def _build_game_chat(g):
@@ -421,13 +455,13 @@ def _build_game_chat(g):
             prompt = (it.get('prompt') or '').strip()
             m = _PROMPT_DAY_RE.search(prompt)
             cur = section(int(m.group(1)) if m else (cur_n or 1))
-            thinking, deliberation, prose, action = _parse_llm_response(it.get('response'))
+            thinking, deliberation, prose, action, tools = _parse_llm_response(it.get('response'))
             slot = slot_of.get(it.get('model'), '')
             entry = {
                 'kind': 'call', 'tag': it.get('tag', ''), 'slot': slot,
                 'model': it.get('model', ''),
                 'thinking': thinking, 'deliberation': deliberation,
-                'prose': prose, 'action': action,
+                'prose': prose, 'action': action, 'tools': tools,
                 'prompt': prompt,
             }
             if slot and slot not in systems and (it.get('system') or '').strip():

@@ -6,10 +6,9 @@
 {% block extra_head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
 {% block content %}
-<section class="section" style="padding-top:2.4rem">
+<section class="section ebc-page" style="padding-top:2.4rem">
     <div class="ebc-topbar">
         <a class="section-link" href="{% url 'portfolio:electionbench' %}">← ElectionBench</a>
-        <a class="section-link" href="{% url 'portfolio:electionbench_game_full' g.id %}" target="_blank" rel="noopener">Full raw log ↗</a>
     </div>
 
     {% if chat %}
@@ -50,19 +49,6 @@
         <div class="ebc-span"><span class="k">Demographics</span><span class="v">{{ s.demographics|join:", " }}</span></div>
     </div>
 
-    {% if chat.systems %}
-    <div class="ebc-systems reveal">
-        {% if chat.systems.A %}
-        <details class="ebc-sys a"><summary>System prompt — <strong>{{ s.candidate_a }}</strong> (A)</summary>
-            <pre>{{ chat.systems.A }}</pre></details>
-        {% endif %}
-        {% if chat.systems.B %}
-        <details class="ebc-sys b"><summary>System prompt — <strong>{{ s.candidate_b }}</strong> (B)</summary>
-            <pre>{{ chat.systems.B }}</pre></details>
-        {% endif %}
-    </div>
-    {% endif %}
-
     {# ---- the campaign, day by day ---- #}
     {% for d in chat.days %}
     <section class="ebc-day">
@@ -81,10 +67,16 @@
         <div class="ebc-cols">
             <div class="ebc-col col-a">
                 <div class="ebc-col-head"><span class="ebc-name">{{ s.candidate_a }}</span><span class="ebc-slot">slot A</span></div>
+                {% if forloop.first and chat.systems.A %}
+                <details class="ebc-sys a"><summary>system prompt</summary><pre>{{ chat.systems.A }}</pre></details>
+                {% endif %}
                 {% for it in d.col_a %}{% include 'portfolio/_eb_msg.html' %}{% endfor %}
             </div>
             <div class="ebc-col col-b">
                 <div class="ebc-col-head"><span class="ebc-name">{{ s.candidate_b }}</span><span class="ebc-slot">slot B</span></div>
+                {% if forloop.first and chat.systems.B %}
+                <details class="ebc-sys b"><summary>system prompt</summary><pre>{{ chat.systems.B }}</pre></details>
+                {% endif %}
                 {% for it in d.col_b %}{% include 'portfolio/_eb_msg.html' %}{% endfor %}
             </div>
         </div>

@@ -831,6 +831,7 @@ textarea.field { min-height: 140px; resize: vertical; }
 .eb-io.resp { border-left: 2px solid var(--accent); }
 
 /* ---- ElectionBench game page: chat-style campaign view ---- */
+.ebc-page { max-width: min(1760px, 100%); }
 .ebc-topbar { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 2.2rem; }
 .ebc-title {
     font-family: var(--font-display); font-weight: 500; letter-spacing: -.01em;
@@ -867,7 +868,7 @@ textarea.field { min-height: 140px; resize: vertical; }
 
 /* parallel columns — the two candidates act side by side within a day */
 .ebc-mid { display: flex; flex-direction: column; align-items: center; gap: .7rem; margin-bottom: 1rem; }
-.ebc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; align-items: start; }
+.ebc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; align-items: start; }
 .ebc-col { display: flex; flex-direction: column; gap: .9rem; min-width: 0; }
 .ebc-col-head {
     display: flex; align-items: baseline; gap: .7rem; padding: .45rem .2rem;
@@ -908,24 +909,33 @@ textarea.field { min-height: 140px; resize: vertical; }
     background: linear-gradient(270deg, rgba(255, 92, 56, .07), rgba(13, 11, 26, .7) 45%); }
 
 .ebc-who { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: .6rem;
-    font-family: var(--font-mono); font-size: .72rem; letter-spacing: .04em; }
+    font-family: var(--font-mono); font-size: .76rem; letter-spacing: .04em; }
 .ebc-name { font-weight: 600; }
 .side-a .ebc-name { color: var(--accent); }
 .side-b .ebc-name { color: var(--ember); }
 .ebc-slot { color: var(--faint); font-size: .64rem; text-transform: uppercase; letter-spacing: .14em; }
 
-.ebc-prose { font-size: .93rem; line-height: 1.65; color: var(--text); overflow-wrap: anywhere; }
-.ebc-prose + .ebc-action { margin-top: .8rem; }
+.ebc-prose { font-size: 1rem; line-height: 1.65; color: var(--text); overflow-wrap: anywhere; }
+.ebc-prose + .ebc-action, .ebc-prose + .ebc-tool { margin-top: .85rem; }
 
 .ebc-action { position: relative; margin: 0; padding: .9rem 1rem .8rem; white-space: pre-wrap; word-break: break-word;
-    font-family: var(--font-mono); font-size: .74rem; line-height: 1.55; color: var(--text);
+    font-family: var(--font-mono); font-size: .8rem; line-height: 1.55; color: var(--text);
     background: rgba(6, 5, 16, .55); border: 1px solid var(--border); border-radius: var(--radius-sm); }
-.ebc-action::before { content: 'action'; display: block; font-size: .58rem; letter-spacing: .2em;
+.ebc-action::before { content: 'action'; display: block; font-size: .6rem; letter-spacing: .2em;
     text-transform: uppercase; color: var(--accent); margin-bottom: .45rem; }
 .side-b .ebc-action::before { color: var(--ember); }
 
+/* tool calls — the model's chosen function, rendered as a card */
+.ebc-tool { margin-top: .6rem; padding: .75rem .95rem; background: rgba(6, 5, 16, .55);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.ebc-tool + .ebc-tool { margin-top: .5rem; }
+.ebc-tool-name { display: block; font-family: var(--font-mono); font-size: .82rem; font-weight: 600;
+    letter-spacing: .04em; color: var(--accent); }
+.col-b .ebc-tool-name, .side-b .ebc-tool-name { color: var(--ember); }
+.ebc-tool pre { margin: .4rem 0 0; white-space: pre-wrap; word-break: break-word;
+    font-family: var(--font-mono); font-size: .8rem; line-height: 1.6; color: var(--text); }
+
 .ebc-think, .ebc-prompt { margin: 0 0 .7rem; }
-.ebc-prompt { margin: .8rem 0 0; }
 .ebc-think > summary, .ebc-prompt > summary {
     cursor: pointer; list-style: none; font-family: var(--font-mono); font-size: .64rem;
     letter-spacing: .16em; text-transform: uppercase; color: var(--faint);
@@ -935,13 +945,13 @@ textarea.field { min-height: 140px; resize: vertical; }
 .ebc-think[open] > summary::before, .ebc-prompt[open] > summary::before { content: '▾ '; }
 .ebc-think > summary:hover, .ebc-prompt > summary:hover { color: var(--muted); }
 .ebc-think pre, .ebc-prompt pre { margin: .5rem 0 0; padding: .7rem .9rem; white-space: pre-wrap; word-break: break-word;
-    max-height: 340px; overflow: auto; font-family: var(--font-mono); font-size: .72rem; line-height: 1.55;
+    max-height: 340px; overflow: auto; font-family: var(--font-mono); font-size: .78rem; line-height: 1.55;
     color: var(--muted); background: rgba(6, 5, 16, .45); border-left: 2px dashed var(--border-strong);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 
 /* environment-confirmed events */
-.ebc-event { max-width: min(62ch, 88%); padding: .55rem .9rem; border: 1px solid var(--border);
-    border-radius: var(--radius-sm); background: rgba(6, 5, 16, .4); font-size: .84rem; color: var(--muted); }
+.ebc-event { max-width: min(62ch, 88%); padding: .6rem .95rem; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: rgba(6, 5, 16, .4); font-size: .92rem; color: var(--muted); }
 .side-a .ebc-event { border-left: 2px solid rgba(139, 124, 255, .5); }
 .side-b .ebc-event { border-right: 2px solid rgba(255, 92, 56, .5); text-align: right; }
 .side-mid .ebc-event { text-align: center; }
