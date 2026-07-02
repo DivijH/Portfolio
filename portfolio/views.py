@@ -322,7 +322,6 @@ _ENV_RE = re.compile(
 _STATE_RE = re.compile(r'\bS(\d+): (\d+) voters')
 
 
-_REASON_MARK = re.compile(r'(?im)^\s*reasoning\s*:')
 _PROMPT_DAY_RE = re.compile(r'===\s*Day\s+(\d+)\s+of\b')
 _TOOL_RE = re.compile(r'^\s*\[tool_call\]\s*([A-Za-z0-9_.\-]+)\((.*)\)\s*$', re.M)
 
@@ -348,14 +347,13 @@ def _fmt_tool_args(raw):
 
 
 def _parse_llm_response(text):
-    """Split a candidate response into (thinking, deliberation, prose, action, tools).
+    """Split a candidate response into (thinking, prose, action, tools).
 
     Current sims use tool calling — the streamer serializes each call as a
     "[tool_call] name({json args})" line. Older runs replied with a JSON
-    action in ``` fences instead. Reasoning models wrap thinking in <think>
-    tags (sometimes with the opening tag stripped by the serving stack);
-    non-reasoning models simply have no thinking. Verbose models that think
-    out loud in plain prose get that preamble folded away as deliberation.
+    action in ``` fences instead. Thinking comes only from explicit <think>
+    content (sometimes with the opening tag stripped by the serving stack);
+    non-reasoning models have none, and their prose is simply their reply.
     """
     text = text or ''
     thinking = '\n\n'.join(p.strip() for p in _THINK_RE.findall(text)).strip()
@@ -382,19 +380,7 @@ def _parse_llm_response(text):
         if m:
             action = m.group(1).strip()
             prose = prose[:m.start()].strip()
-
-    deliberation = ''
-    if not thinking and len(prose) > 700:
-        marks = list(_REASON_MARK.finditer(prose))
-        if marks:
-            cut = marks[-1].start()
-            deliberation, prose = prose[:cut].strip(), prose[cut:].strip()
-        else:
-            parts = prose.split('\n\n')
-            if len(parts) > 1 and len(parts[-1]) < 800:
-                deliberation = '\n\n'.join(parts[:-1]).strip()
-                prose = parts[-1].strip()
-    return thinking, deliberation, prose, action, tools
+    return thinking, prose, action, tools
 
 
 def _build_game_chat(g):
@@ -455,12 +441,12 @@ def _build_game_chat(g):
             prompt = (it.get('prompt') or '').strip()
             m = _PROMPT_DAY_RE.search(prompt)
             cur = section(int(m.group(1)) if m else (cur_n or 1))
-            thinking, deliberation, prose, action, tools = _parse_llm_response(it.get('response'))
+            thinking, prose, action, tools = _parse_llm_response(it.get('response'))
             slot = slot_of.get(it.get('model'), '')
             entry = {
                 'kind': 'call', 'tag': it.get('tag', ''), 'slot': slot,
                 'model': it.get('model', ''),
-                'thinking': thinking, 'deliberation': deliberation,
+                'thinking': thinking,
                 'prose': prose, 'action': action, 'tools': tools,
                 'prompt': prompt,
             }

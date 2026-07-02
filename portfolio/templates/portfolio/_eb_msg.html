@@ -18,9 +18,6 @@ Bubble order: prompt → thinking → reasoning → tool calls / action.{% endco
     {% if it.thinking %}
     <details class="ebc-think"><summary>thinking</summary><pre>{{ it.thinking }}</pre></details>
     {% endif %}
-    {% if it.deliberation %}
-    <details class="ebc-think"><summary>deliberation</summary><pre>{{ it.deliberation }}</pre></details>
-    {% endif %}
     {% if it.prose %}<div class="ebc-prose">{{ it.prose|linebreaksbr }}</div>{% endif %}
     {% for tool in it.tools %}
     <div class="ebc-tool">
