@@ -316,6 +316,7 @@ def electionbench_h2h(request):
 # --- game-page chat parsing --------------------------------------------------
 
 _THINK_RE = re.compile(r'<think>(.*?)</think>', re.S | re.I)
+_BTHINK_RE = re.compile(r'\[thinking\]\s*(.*?)\s*\[/thinking\]', re.S | re.I)
 _FENCE_RE = re.compile(r'```[a-zA-Z]*\s*(.*?)```', re.S)
 _ENV_RE = re.compile(
     r'favorability A ([\d.]+) / B ([\d.]+) · budget A ([\d.]+) / B ([\d.]+)')
@@ -365,9 +366,23 @@ def _parse_llm_response(text):
         thinking = (thinking + '\n\n' + head).strip() if thinking else head
         body = body[cut + len('</think>'):]
 
+    # streamer-serialized CoT from reasoning-parser models: [thinking]…[/thinking]
+    for part in _BTHINK_RE.findall(body):
+        thinking = (thinking + '\n\n' + part.strip()).strip() if thinking else part.strip()
+    body = _BTHINK_RE.sub('', body)
+
     tools = [{'name': m.group(1), 'args': _fmt_tool_args(m.group(2))}
              for m in _TOOL_RE.finditer(body)]
     body = _TOOL_RE.sub('', body)
+
+    # a very long CoT can lose its closing marker to the streamer's length
+    # cap — everything after an unclosed [thinking] is thinking
+    low = body.lower()
+    cut = low.find('[thinking]')
+    if cut != -1:
+        tail = body[cut + len('[thinking]'):].strip()
+        thinking = (thinking + '\n\n' + tail).strip() if thinking else tail
+        body = body[:cut]
 
     action = ''
     if not tools:  # legacy fenced-JSON actions
