@@ -847,11 +847,15 @@ textarea.field { min-height: 140px; resize: vertical; }
 
 .ebc-systems { margin-top: 1rem; display: flex; flex-direction: column; gap: .5rem; }
 .ebc-sys { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
-.ebc-sys > summary { cursor: pointer; padding: .55rem .9rem; font-family: var(--font-mono); font-size: .74rem; color: var(--muted); list-style: none; }
+.ebc-sys > summary { display: flex; align-items: center; gap: .6rem; cursor: pointer; padding: .55rem .9rem;
+    font-family: var(--font-mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); list-style: none; user-select: none; transition: background-color .2s, color .2s; }
 .ebc-sys > summary::-webkit-details-marker { display: none; }
-.ebc-sys > summary::before { content: '▸ '; color: var(--accent); }
-.ebc-sys[open] > summary::before { content: '▾ '; }
+.ebc-sys > summary::before { content: '▸'; display: inline-block; flex: none; font-size: 1.05rem;
+    line-height: 1; color: var(--accent); transition: transform .2s var(--ease); }
+.ebc-sys[open] > summary::before { transform: rotate(90deg); }
 .ebc-sys.b > summary::before { color: var(--ember); }
+.ebc-sys > summary:hover { background: rgba(139, 124, 255, .08); color: var(--text); }
 .ebc-sys pre { margin: 0; padding: .8rem .9rem; white-space: pre-wrap; word-break: break-word;
     font-family: var(--font-mono); font-size: .74rem; line-height: 1.55; color: var(--muted);
     border-top: 1px solid var(--border); }
@@ -935,19 +939,33 @@ textarea.field { min-height: 140px; resize: vertical; }
 .ebc-tool pre { margin: .4rem 0 0; white-space: pre-wrap; word-break: break-word;
     font-family: var(--font-mono); font-size: .8rem; line-height: 1.6; color: var(--text); }
 
-.ebc-think, .ebc-prompt { margin: 0 0 .7rem; }
+/* collapsible boxes (prompt / thinking) — unmistakable click targets */
+.ebc-think, .ebc-prompt {
+    margin: 0 0 .7rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: rgba(6, 5, 16, .35); overflow: hidden;
+}
+.ebc-think { border-left: 2px solid rgba(139, 124, 255, .5); }
+.col-b .ebc-think, .side-b .ebc-think { border-left-color: rgba(255, 92, 56, .5); }
 .ebc-think > summary, .ebc-prompt > summary {
-    cursor: pointer; list-style: none; font-family: var(--font-mono); font-size: .64rem;
-    letter-spacing: .16em; text-transform: uppercase; color: var(--faint);
+    display: flex; align-items: center; gap: .6rem; padding: .55rem .85rem;
+    cursor: pointer; list-style: none; user-select: none;
+    font-family: var(--font-mono); font-size: .7rem;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+    transition: background-color .2s, color .2s;
 }
 .ebc-think > summary::-webkit-details-marker, .ebc-prompt > summary::-webkit-details-marker { display: none; }
-.ebc-think > summary::before, .ebc-prompt > summary::before { content: '▸ '; }
-.ebc-think[open] > summary::before, .ebc-prompt[open] > summary::before { content: '▾ '; }
-.ebc-think > summary:hover, .ebc-prompt > summary:hover { color: var(--muted); }
-.ebc-think pre, .ebc-prompt pre { margin: .5rem 0 0; padding: .7rem .9rem; white-space: pre-wrap; word-break: break-word;
+.ebc-think > summary::before, .ebc-prompt > summary::before {
+    content: '▸'; display: inline-block; flex: none;
+    font-size: 1.05rem; line-height: 1; color: var(--accent);
+    transition: transform .2s var(--ease);
+}
+.col-b .ebc-think > summary::before, .col-b .ebc-prompt > summary::before,
+.side-b .ebc-think > summary::before, .side-b .ebc-prompt > summary::before { color: var(--ember); }
+.ebc-think[open] > summary::before, .ebc-prompt[open] > summary::before { transform: rotate(90deg); }
+.ebc-think > summary:hover, .ebc-prompt > summary:hover { background: rgba(139, 124, 255, .08); color: var(--text); }
+.ebc-think pre, .ebc-prompt pre { margin: 0; padding: .8rem .95rem; white-space: pre-wrap; word-break: break-word;
     max-height: 340px; overflow: auto; font-family: var(--font-mono); font-size: .78rem; line-height: 1.55;
-    color: var(--muted); background: rgba(6, 5, 16, .45); border-left: 2px dashed var(--border-strong);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+    color: var(--muted); background: rgba(6, 5, 16, .3); border-top: 1px solid var(--border); }
 
 /* environment-confirmed events */
 .ebc-event { max-width: min(62ch, 88%); padding: .6rem .95rem; border: 1px solid var(--border);
@@ -958,12 +976,21 @@ textarea.field { min-height: 140px; resize: vertical; }
 .ebc-event-kind { display: block; font-family: var(--font-mono); font-size: .6rem; letter-spacing: .18em;
     text-transform: uppercase; color: var(--faint); margin-bottom: .25rem; }
 .ebc-event-text { overflow-wrap: anywhere; }
-.ebc-event details > summary { cursor: pointer; list-style: none; }
+.ebc-event details > summary { cursor: pointer; list-style: none; user-select: none; }
 .ebc-event details > summary::-webkit-details-marker { display: none; }
+.ebc-event details > summary::before { content: '▸'; display: inline-block; margin-right: .5rem;
+    font-size: 1rem; line-height: 1; color: var(--accent); }
+.side-b .ebc-event details > summary::before, .col-b .ebc-event details > summary::before { color: var(--ember); }
+.ebc-event details > summary:hover { color: var(--text); }
 .ebc-event details[open] > summary { display: none; }
 .ebc-other { max-width: min(62ch, 88%); border: 1px solid var(--border); border-radius: var(--radius-sm);
     background: var(--surface); padding: .5rem .9rem; font-family: var(--font-mono); font-size: .74rem; color: var(--muted); }
-.ebc-other > summary { cursor: pointer; }
+.ebc-other > summary { display: flex; align-items: center; gap: .55rem; cursor: pointer; list-style: none; user-select: none; }
+.ebc-other > summary::-webkit-details-marker { display: none; }
+.ebc-other > summary::before { content: '▸'; display: inline-block; flex: none; font-size: 1rem;
+    line-height: 1; color: var(--accent); transition: transform .2s var(--ease); }
+.ebc-other[open] > summary::before { transform: rotate(90deg); }
+.ebc-other > summary:hover { color: var(--text); }
 
 /* final debate */
 .ebc-debate { margin-top: 1.6rem; border: 1px solid var(--border); border-radius: var(--radius);
