@@ -36,7 +36,7 @@ class PublicationAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     fieldsets = (
         (None, {'fields': ('title', 'slug', 'authors', 'venue', 'year', 'month', 'kind', 'stage', 'award',
-                           'tldr', 'abstract', 'image', 'tags', 'featured')}),
+                           'tldr', 'abstract', 'body', 'image', 'tags', 'featured')}),
         ('Links', {'fields': ('pdf_url', 'arxiv_url', 'code_url', 'project_url',
                               'video_url', 'slides_url', 'bibtex')}),
     )

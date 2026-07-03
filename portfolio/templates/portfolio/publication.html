@@ -46,6 +46,10 @@
     </div>
     {% endif %}
 
+    {% if publication.body %}
+    <div class="pub-longform">{{ publication.body|safe }}</div>
+    {% endif %}
+
     {% if publication.bibtex %}
     <div class="reveal" style="margin-top:2.2rem">
         <h2 class="detail-h">BibTeX <button class="pub-toggle" data-copy="bibtex-detail">copy</button></h2>

@@ -8,6 +8,7 @@ safe to run repeatedly. Experience dates/titles were inferred from public
 profiles — verify them in the admin.
 """
 import datetime
+import pathlib
 
 from django.core.management.base import BaseCommand
 
@@ -193,6 +194,12 @@ class Command(BaseCommand):
             tag_keys = p.pop('tag_keys')
             obj = models.Publication.objects.create(**p)
             obj.tags.set([tags[k] for k in tag_keys])
+
+        # Long-form page bodies live next to this command (seed_content/<slug>_body.html)
+        content_dir = pathlib.Path(__file__).resolve().parent / 'seed_content'
+        for f in content_dir.glob('*_body.html') if content_dir.exists() else []:
+            slug = f.name[:-len('_body.html')]
+            models.Publication.objects.filter(slug=slug).update(body=f.read_text())
         self.stdout.write(self.style.SUCCESS(f'✓ {len(pubs)} publications'))
 
         # ---- News (paper acceptances) -----------------------------------

@@ -160,6 +160,10 @@ class Publication(models.Model):
         max_length=300, blank=True,
         help_text='One-line TL;DR shown with featured publications on the home page.')
     abstract = models.TextField(max_length=3000, blank=True)
+    body = models.TextField(
+        blank=True,
+        help_text='Optional long-form HTML for this paper’s page — method, figures, '
+                  'results. Rendered as-is below the abstract.')
     award = models.CharField(
         max_length=120, blank=True,
         help_text='Optional badge, e.g. "Oral", "Spotlight", "Best Paper".',

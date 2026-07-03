@@ -710,6 +710,68 @@ html.fx .lc-slide .lc-papers { min-height: 8.5rem; }
 .prose { max-width: 72ch; color: var(--muted); font-size: 1.02rem; line-height: 1.85; }
 .prose p { margin: 0 0 1.1rem; }
 
+/* ---- long-form paper pages (Publication.body) ---- */
+.pub-longform { margin-top: 2.8rem; }
+.pub-longform h2 {
+    font-family: var(--font-display); font-weight: 500; font-size: 1.45rem;
+    margin: 3rem 0 1rem; letter-spacing: -.01em;
+}
+.pub-longform h2::before { content: ''; display: block; width: 26px; height: 2px;
+    background: var(--gradient); margin-bottom: .8rem; }
+.pub-longform h3 { font-size: 1.05rem; font-weight: 600; margin: 1.8rem 0 .6rem; color: var(--text); }
+.pub-longform p { max-width: 76ch; color: var(--muted); font-size: 1rem; line-height: 1.8; margin: 0 0 1.1rem; }
+.pub-longform p strong { color: var(--text); }
+.pub-longform ul { max-width: 76ch; color: var(--muted); line-height: 1.75; padding-left: 1.2rem; margin: 0 0 1.2rem; }
+.pub-longform li { margin-bottom: .5rem; }
+.pub-longform li::marker { color: var(--accent); }
+.pub-longform a { color: var(--accent); border-bottom: 1px solid rgba(139, 124, 255, .35); }
+.pub-longform a:hover { border-color: var(--accent); }
+.pub-longform code {
+    font-family: var(--font-mono); font-size: .84em; color: var(--text);
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: .08em .35em; white-space: nowrap;
+}
+
+.pub-longform .stats { display: flex; flex-wrap: wrap; gap: .8rem; margin: 1.6rem 0 .6rem; }
+.pub-longform .stat {
+    flex: 1 1 190px; min-width: 170px; padding: 1rem 1.2rem;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: rgba(13, 11, 26, .55); backdrop-filter: blur(6px);
+}
+.pub-longform .stat b {
+    display: block; font-family: var(--font-display); font-weight: 500;
+    font-size: 1.5rem; color: var(--accent); letter-spacing: -.01em;
+}
+.pub-longform .stat.ember b { color: var(--ember); }
+.pub-longform .stat span {
+    font-family: var(--font-mono); font-size: .66rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--faint); line-height: 1.5; display: block; margin-top: .3rem;
+}
+
+.pub-longform figure {
+    margin: 1.8rem 0; padding: 1.4rem; border: 1px solid var(--border);
+    border-radius: var(--radius); background: rgba(13, 11, 26, .55);
+    backdrop-filter: blur(6px); overflow-x: auto;
+}
+.pub-longform figure svg { display: block; width: 100%; height: auto; min-width: 620px; }
+.pub-longform figcaption {
+    font-family: var(--font-mono); font-size: .72rem; color: var(--faint);
+    letter-spacing: .04em; margin-top: 1rem; line-height: 1.6; max-width: none;
+}
+
+.pub-longform .tablewrap { overflow-x: auto; border: 1px solid var(--border);
+    border-radius: var(--radius); background: rgba(13, 11, 26, .55); margin: 1.6rem 0; }
+.pub-longform table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.pub-longform th, .pub-longform td { padding: .65rem .95rem; text-align: left;
+    border-bottom: 1px solid var(--border); white-space: nowrap; }
+.pub-longform thead th { font-family: var(--font-mono); font-size: .62rem; text-transform: uppercase;
+    letter-spacing: .12em; color: var(--accent); background: rgba(6, 5, 16, .6); }
+.pub-longform tbody tr:last-child td { border-bottom: none; }
+.pub-longform td:first-child { color: var(--text); font-weight: 500; }
+.pub-longform tr.hl td { background: var(--accent-soft); color: var(--text); }
+.pub-longform td.up { color: #34d399; }
+.pub-longform td.down { color: var(--ember); }
+
 /* ============================================================
    Contact
    ============================================================ */

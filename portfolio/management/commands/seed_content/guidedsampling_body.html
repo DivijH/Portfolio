@@ -1,0 +1,184 @@
+<div class="stats">
+    <div class="stat"><b>+21.6%</b><span>pass@50 vs repeated sampling · avg across benchmarks, best base model</span></div>
+    <div class="stat"><b>+9.7%</b><span>pass@5 after fine-tuning on GuidedSampling trajectories vs RS data</span></div>
+    <div class="stat"><b>1.67 → 3.03</b><span>distinct concepts per instance in solutions from fine-tuned models</span></div>
+    <div class="stat ember"><b>up to +34.6%</b><span>largest single pass@50 improvement observed</span></div>
+</div>
+
+<h2>The problem with repeated sampling</h2>
+<p>Repeated Sampling (RS) is the simplest way to spend inference-time compute: sample the model
+<em>n</em> times and keep the best answer. It works — but the samples are far from independent
+tries. In practice the model tends to commit to the same underlying approach over and over, so most
+of the budget buys near-duplicates of one idea. When that idea is wrong, no amount of resampling
+saves you: measured across benchmarks, RS produces only ~2.7–6.7 genuinely distinct solution
+concepts per problem even at 100 samples.</p>
+
+<h2>How GuidedSampling works</h2>
+<p>GuidedSampling splits inference into two explicit phases, so that <strong>what approach to try</strong>
+and <strong>how to execute it</strong> are sampled separately:</p>
+
+<figure>
+<svg viewBox="0 0 960 340" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace">
+  <!-- question -->
+  <rect x="8" y="142" width="132" height="56" rx="6" fill="none" stroke="rgba(237,234,248,.35)" stroke-width="1.5"/>
+  <text x="74" y="166" fill="#edeaf8" font-size="13" text-anchor="middle">question</text>
+  <text x="74" y="184" fill="#8b7cff" font-size="13" text-anchor="middle">x</text>
+  <line x1="140" y1="170" x2="184" y2="170" stroke="rgba(237,234,248,.3)" stroke-width="1.5"/>
+  <polygon points="184,165 194,170 184,175" fill="rgba(237,234,248,.4)"/>
+
+  <!-- exploration -->
+  <rect x="200" y="28" width="248" height="286" rx="8" fill="rgba(139,124,255,.04)" stroke="rgba(139,124,255,.35)" stroke-dasharray="5 5"/>
+  <text x="324" y="52" fill="#8b7cff" font-size="11" letter-spacing="3" text-anchor="middle">EXPLORATION</text>
+  <rect x="222" y="70" width="204" height="40" rx="5" fill="none" stroke="#8b7cff" stroke-opacity=".8"/>
+  <text x="324" y="94" fill="#a6a2c0" font-size="12" text-anchor="middle">concept c1</text>
+  <line x1="324" y1="110" x2="324" y2="124" stroke="rgba(139,124,255,.5)"/>
+  <rect x="222" y="126" width="204" height="40" rx="5" fill="none" stroke="#8b7cff" stroke-opacity=".8"/>
+  <text x="324" y="150" fill="#a6a2c0" font-size="12" text-anchor="middle">concept c2 | c1</text>
+  <line x1="324" y1="166" x2="324" y2="180" stroke="rgba(139,124,255,.5)"/>
+  <rect x="222" y="182" width="204" height="40" rx="5" fill="none" stroke="#8b7cff" stroke-opacity=".8"/>
+  <text x="324" y="206" fill="#a6a2c0" font-size="12" text-anchor="middle">concept c3 | c1,c2</text>
+  <text x="324" y="238" fill="#5b5677" font-size="15" text-anchor="middle">&#8942;</text>
+  <rect x="222" y="252" width="204" height="40" rx="5" fill="none" stroke="#8b7cff" stroke-opacity=".8"/>
+  <text x="324" y="276" fill="#a6a2c0" font-size="12" text-anchor="middle">concept cK | c1:K-1</text>
+
+  <!-- arrows exploration -> generation -->
+  <line x1="426" y1="90" x2="530" y2="90" stroke="rgba(237,234,248,.25)" stroke-width="1.3"/>
+  <line x1="426" y1="146" x2="530" y2="146" stroke="rgba(237,234,248,.25)" stroke-width="1.3"/>
+  <line x1="426" y1="202" x2="530" y2="202" stroke="rgba(237,234,248,.25)" stroke-width="1.3"/>
+  <line x1="426" y1="272" x2="530" y2="272" stroke="rgba(237,234,248,.25)" stroke-width="1.3"/>
+
+  <!-- generation -->
+  <rect x="536" y="28" width="240" height="286" rx="8" fill="rgba(255,92,56,.03)" stroke="rgba(255,92,56,.3)" stroke-dasharray="5 5"/>
+  <text x="656" y="52" fill="#ff5c38" font-size="11" letter-spacing="3" text-anchor="middle">GENERATION</text>
+  <g stroke="rgba(237,234,248,.4)" fill="none">
+    <rect x="574" y="78" width="22" height="22" rx="4" fill="rgba(255,92,56,.55)" stroke="none"/>
+    <rect x="604" y="78" width="22" height="22" rx="4"/>
+    <rect x="634" y="78" width="22" height="22" rx="4"/>
+    <rect x="574" y="134" width="22" height="22" rx="4"/>
+    <rect x="604" y="134" width="22" height="22" rx="4"/>
+    <rect x="634" y="134" width="22" height="22" rx="4"/>
+    <rect x="574" y="190" width="22" height="22" rx="4"/>
+    <rect x="604" y="190" width="22" height="22" rx="4"/>
+    <rect x="634" y="190" width="22" height="22" rx="4"/>
+    <rect x="574" y="260" width="22" height="22" rx="4"/>
+    <rect x="604" y="260" width="22" height="22" rx="4"/>
+    <rect x="634" y="260" width="22" height="22" rx="4"/>
+  </g>
+  <text x="700" y="95" fill="#5b5677" font-size="12">x M</text>
+  <text x="700" y="151" fill="#5b5677" font-size="12">x M</text>
+  <text x="700" y="207" fill="#5b5677" font-size="12">x M</text>
+  <text x="700" y="277" fill="#5b5677" font-size="12">x M</text>
+  <text x="656" y="240" fill="#5b5677" font-size="15" text-anchor="middle">&#8942;</text>
+
+  <!-- arrows generation -> pool -->
+  <line x1="776" y1="170" x2="812" y2="170" stroke="rgba(237,234,248,.3)" stroke-width="1.5"/>
+  <polygon points="812,165 822,170 812,175" fill="rgba(237,234,248,.4)"/>
+
+  <!-- pool -->
+  <rect x="824" y="118" width="128" height="104" rx="6" fill="none" stroke="rgba(237,234,248,.35)" stroke-width="1.5"/>
+  <text x="888" y="146" fill="#a6a2c0" font-size="11" text-anchor="middle">candidate pool</text>
+  <text x="888" y="170" fill="#edeaf8" font-size="13" text-anchor="middle">S = &#8899; Sk</text>
+  <text x="888" y="200" fill="#ff5c38" font-size="13" text-anchor="middle">pass@k &#8593;</text>
+</svg>
+<figcaption>One exploration pass, then guided generation. Each concept is sampled conditioned on
+the question <em>and every previous concept</em>, which pushes the model into new regions of the
+solution space; generation then commits to one concept at a time. Repeated sampling, by contrast,
+draws all 100 samples from whatever single approach the model happens to prefer.</figcaption>
+</figure>
+
+<h3>Exploration phase</h3>
+<p>Given a question <code>x</code>, the model iteratively proposes high-level concepts, theorems, or
+strategies that could crack the problem: the <em>k</em>-th concept is sampled as
+<code>c_k ~ p(&middot; | x, c_1:(k-1))</code> — conditioned on all previous concepts. Seeing its own
+earlier ideas discourages repetition and encourages coverage. The loop stops at <code>K</code>
+concepts, or early once the model decides nothing genuinely new remains.</p>
+
+<h3>Generation phase</h3>
+<p>For every concept <code>c_k</code>, the model generates <code>M</code> full solutions conditioned
+on the question <em>and that specific concept</em>: <code>s ~ p(s | x, c_k)</code>. The final
+candidate pool is the union over all concepts. Unlike Tree-of-Thoughts, exploration happens exactly
+once, up front — no per-step branching, so the overhead over plain RS is just the handful of
+concept-generation calls.</p>
+
+<h2>What the theory says</h2>
+<p>The paper derives bounds on when this decomposition beats direct sampling. The gist: performance
+hinges on the probability of surfacing at least one <em>relevant</em> concept,
+<code>P(C_r | x)</code> — a model that explores well converts extra compute into genuinely new
+attempts instead of duplicates. Two properties matter in practice:</p>
+<ul>
+    <li><strong>Recovery from irrelevant concepts.</strong> A bad guide doesn't sink the pool — an
+    off-topic concept sometimes still lands on a correct solution (the appendix documents a case
+    study of exactly this), and other concepts' budgets are unaffected.</li>
+    <li><strong>Compounding with compute.</strong> The gap over RS widens as <em>k</em> grows in
+    pass@k: the more samples you can afford, the more the structured diversity pays off.</li>
+</ul>
+
+<h2>Inference results</h2>
+<p>Evaluated on Llama-3.2-3B-Instruct, Qwen2.5-3B-Instruct and Gemma-3-27b-it with
+<code>n = 100</code> samples per problem, against plain repeated sampling:</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Benchmark</th><th>Domain</th><th>pass@50 vs RS (avg across models)</th></tr></thead>
+<tbody>
+<tr><td>MATH</td><td>mathematical reasoning</td><td class="up">+21.8%</td></tr>
+<tr><td>GPQA-Diamond</td><td>scientific reasoning</td><td class="up">+11.87%</td></tr>
+<tr><td>HumanEval</td><td>code generation</td><td class="up">+11.28%</td></tr>
+<tr><td>OlympiadBench</td><td>olympiad math &amp; science</td><td class="up">+3.08%</td></tr>
+</tbody>
+</table></div>
+
+<p>Averaged over every model–benchmark pair the improvement is <strong>+16.01%</strong>; with the
+best-performing base model it averages <strong>+21.6%</strong> across benchmarks, peaking at
+<strong>+34.6%</strong>. Measured directly, candidate diversity rises ~17.6% (e.g. 3.87 vs 2.66
+distinct concepts on HumanEval).</p>
+
+<p>One honest failure mode: gains depend on the model being able to <em>propose</em> varied
+concepts. Qwen2.5-3B averages just 1.13 distinct concepts per HumanEval problem (Llama-3.2-3B
+manages 7.58), and there GuidedSampling actually underperforms RS — every sample gets funneled
+through the same idea. Swapping in Llama's concepts while letting Qwen write the code flips the
+result to +3.65% over RS (83.53 pass@50): the bottleneck is concept generation, not execution.</p>
+
+<h2>From inference trick to training signal</h2>
+<p>Because each trajectory carries an explicit concept, GuidedSampling doubles as a synthetic-data
+generator. From 10k OpenMathInstruct-2 problems, verified-correct trajectories were used to
+fine-tune Llama-3.2-3B-Instruct in two flavors: <strong>FA</strong> (final answer only) and
+<strong>CAA</strong> (concept + answer). Against models trained on RS, STaR, and ToT data:</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Training data</th><th>MATH p@1</th><th>MATH p@5</th><th>GPQA p@1</th><th>GPQA p@5</th>
+<th>HumanEval p@1</th><th>HumanEval p@5</th><th>Olympiad p@1</th><th>Olympiad p@5</th></tr></thead>
+<tbody>
+<tr><td>Base model</td><td>24.00</td><td>33.20</td><td>11.62</td><td>28.28</td><td>27.44</td><td>39.02</td><td>11.32</td><td>19.56</td></tr>
+<tr><td>RS</td><td>37.62</td><td>44.78</td><td>18.13</td><td>40.08</td><td>52.13</td><td>55.78</td><td>6.42</td><td>10.83</td></tr>
+<tr><td>STaR</td><td>36.60</td><td>46.23</td><td>16.61</td><td>38.41</td><td>52.13</td><td>57.35</td><td>5.82</td><td>10.62</td></tr>
+<tr><td>ToT</td><td>40.40</td><td>56.63</td><td>16.77</td><td>44.44</td><td>35.73</td><td>49.51</td><td>9.19</td><td>18.36</td></tr>
+<tr><td>FA (ours)</td><td>29.88</td><td>47.98</td><td>20.20</td><td>50.61</td><td>48.17</td><td>55.95</td><td>11.21</td><td>20.21</td></tr>
+<tr class="hl"><td>CAA (ours)</td><td>38.00</td><td>60.06</td><td>15.66</td><td>40.23</td><td>53.05</td><td>59.21</td><td>10.76</td><td>20.47</td></tr>
+</tbody>
+</table></div>
+
+<p>Fine-tuning on GuidedSampling trajectories lifts pass@5 by <strong>~9.7% on average</strong>
+over RS-trained models, and the trained models keep the diversity habit: distinct concepts per
+instance rise from 1.67 (RS) to 2.58 (FA) and 3.03 (CAA). Notably the biggest diversity gain shows
+up on GPQA-Diamond — a domain shift from the math-only training data — suggesting the exploration
+behavior itself generalizes.</p>
+
+<h2>Spending a fixed budget: K versus M</h2>
+<p>With a fixed total of 100 calls, how many concepts (<code>K</code>) should you explore versus
+how many solutions per concept (<code>M = 100/K</code>)? More exploration helps at first, then
+hurts once each concept's generation budget gets too thin — and at <code>K = 0</code> the method
+degrades exactly to repeated sampling. The sweet spot is task- and model-specific; adaptive
+allocation is left as future work.</p>
+
+<h2>Limitations</h2>
+<ul>
+    <li>Main study covers three open-source models (plus a limited GPT-4o-mini / Phi-4-mini study);
+    frontier proprietary models remain unexplored due to inference cost and lack of training access.</li>
+    <li>The exploration-vs-generation trade-off has no universal setting — picking <code>K</code>
+    adaptively per task is open.</li>
+    <li>Weak concept generators can underperform plain RS (the Qwen-on-HumanEval case above).</li>
+</ul>
+
+<h2>Resources</h2>
+<p>Paper: <a href="https://arxiv.org/abs/2510.03777" target="_blank" rel="noopener">arXiv:2510.03777</a> ·
+Code &amp; data: <a href="https://github.com/DivijH/sampling_inference" target="_blank" rel="noopener">github.com/DivijH/sampling_inference</a></p>
