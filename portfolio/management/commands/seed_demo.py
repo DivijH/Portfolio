@@ -103,7 +103,7 @@ class Command(BaseCommand):
                        "Jailbreaking LLMs via Novel Complex Ciphers",
                  slug='jailbreaking-llms-ciphers',
                  tldr='Stronger reasoning makes LLMs easier to jailbreak — via custom ciphers (ACE/LACE).',
-                 authors='Divij Handa, Zhicheng Zhang, Amir Saeidi, Shrinidhi Kumbhar, '
+                 authors='Divij Handa, Zehua Zhang, Amir Saeidi, Shrinidhi Kumbhar, '
                          'Md Nayem Uddin, Aswin RRV, Chitta Baral',
                  venue='NeurIPS 2025 Workshop (Reliable ML from Unreliable Data)', year=2025, month=12,
                  kind=P.WORKSHOP, stage=S.EVAL_SAFETY, featured=True, arxiv_url='https://arxiv.org/abs/2402.10601',
@@ -134,7 +134,7 @@ class Command(BaseCommand):
             dict(title='BuildBench: Benchmarking LLM Agents on Compiling Real-World Open-Source Software',
                  slug='buildbench',
                  tldr='A realistic benchmark for LLM agents that compile real-world open-source software.',
-                 authors='Zhicheng Zhang, A. P. Bajaj, Divij Handa, S. Liu, A. S. Raj, '
+                 authors='Zehua Zhang, A. P. Bajaj, Divij Handa, S. Liu, A. S. Raj, '
                          'H. Chen, H. Wang, Y. Liu, et al.',
                  venue='DL4C @ NeurIPS 2025', year=2025, month=12, kind=P.WORKSHOP, stage=S.EVAL_SAFETY,
                  arxiv_url='https://arxiv.org/abs/2509.25248',
