@@ -125,7 +125,7 @@ class Command(BaseCommand):
                  slug='optagent',
                  tldr='Uses multi-agent shopper simulation as a reward to optimize e-commerce query rewriting.',
                  authors='Divij Handa, David Blincoe, Orson Adams, Yinlin Fu',
-                 venue='arXiv preprint', year=2025, month=10, kind=P.PREPRINT, stage=S.TEST_TIME,
+                 venue='arXiv preprint', year=2025, month=10, kind=P.PREPRINT, stage=S.TEST_TIME, featured=True,
                  arxiv_url='https://arxiv.org/abs/2510.03771',
                  abstract='Combines multi-agent simulation with an evolutionary algorithm for query rewriting: '
                           'multiple LLM agents act as simulated shoppers, and their averaged scores form a '
