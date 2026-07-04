@@ -85,7 +85,7 @@ class Command(BaseCommand):
                  tldr='Makes inference-time sampling produce genuinely diverse solutions — +21.6% pass@50.',
                  authors='Divij Handa, Mihir Parmar, Aswin RRV, Md Nayem Uddin, Hamid Palangi, Chitta Baral',
                  venue='ICLR 2026', year=2026, month=1, kind=P.CONFERENCE, stage=S.TEST_TIME, featured=True,
-                 arxiv_url='https://arxiv.org/abs/2510.03777',
+                 arxiv_url='https://openreview.net/forum?id=TD9jC48sts',
                  abstract='Decouples exploration from generation at inference time so repeated sampling '
                           'produces genuinely diverse candidate solutions, improving pass@50 by ~21.6% '
                           'over standard repeated sampling.',
@@ -206,7 +206,7 @@ class Command(BaseCommand):
         models.News.objects.all().delete()
         news = [
             (datetime.date(2026, 1, 22), 'GuidedSampling accepted at ICLR 2026.',
-             'https://arxiv.org/abs/2510.03777'),
+             'https://openreview.net/forum?id=TD9jC48sts'),
             (datetime.date(2025, 10, 1), 'Work on jailbreaking LLMs via novel ciphers accepted at the '
              'NeurIPS 2025 Workshop on Reliable ML from Unreliable Data.', 'https://arxiv.org/abs/2402.10601'),
             (datetime.date(2025, 8, 20), 'ThinkTuning accepted at EMNLP 2025.', 'https://arxiv.org/abs/2508.07616'),

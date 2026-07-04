@@ -213,9 +213,10 @@ class Publication(models.Model):
     @property
     def links(self):
         """Present external links as (label, url) pairs in a stable order."""
+        paper_label = 'OpenReview' if 'openreview' in (self.arxiv_url or '') else 'arXiv'
         candidates = [
             ('PDF', self.pdf_url),
-            ('arXiv', self.arxiv_url),
+            (paper_label, self.arxiv_url),
             ('Code', self.code_url),
             ('Project', self.project_url),
             ('Video', self.video_url),
