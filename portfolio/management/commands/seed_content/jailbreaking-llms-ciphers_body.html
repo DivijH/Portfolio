@@ -13,48 +13,10 @@ request in a novel, user-defined cipher and it sails past the safety filter as m
 then the model's reasoning quietly reconstructs the request and answers it. The paper's uncomfortable
 finding: <strong>the better a model is at decoding ciphers, the more vulnerable it becomes.</strong></p>
 
-<figure class="gsa play">
-<button class="gsa-replay" type="button" aria-label="Play the animation again"
- onclick="var f=this.closest('figure');f.classList.remove('play');void f.offsetWidth;f.classList.add('play');">&#9654; play again</button>
+<figure class="gsa">
 <style>
 .gsa svg text { font-family: 'JetBrains Mono', monospace; }
 .gsa .m-label { letter-spacing: 3px; }
-.gsa .af { opacity: 1; }
-.gsa { position: relative; }
-.gsa-replay { position: absolute; top: 1.05rem; right: 1.05rem; z-index: 2;
-  font-family: 'JetBrains Mono', monospace; font-size: .64rem; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--muted); background: rgba(6,5,16,.55);
-  border: 1px solid var(--border); border-radius: 4px; padding: .42rem .75rem;
-  cursor: pointer; transition: color .2s, border-color .2s; }
-.gsa-replay:hover { color: var(--accent); border-color: var(--accent); }
-@media (prefers-reduced-motion: reduce) { .gsa-replay { display: none; } }
-@media (prefers-reduced-motion: no-preference) {
-  .gsa.play .af { animation-duration: 11s; animation-iteration-count: 1;
-    animation-fill-mode: forwards; animation-timing-function: linear; }
-  .gsa.play .q1 { animation-name: jbQ1; } .gsa.play .block { animation-name: jbBlock; }
-  .gsa.play .q2 { animation-name: jbQ2; } .gsa.play .enc { animation-name: jbEnc; }
-  .gsa.play .ciph { animation-name: jbCiph; } .gsa.play .pass { animation-name: jbPass; }
-  .gsa.play .brain { animation-name: jbBrain; } .gsa.play .dec { animation-name: jbDec; }
-  .gsa.play .ans { animation-name: jbAns; }
-}
-/* panel 1: plaintext blocked */
-@keyframes jbQ1 { 0% { opacity: 0; transform: translateX(0); } 4% { opacity: 1; }
-  12% { opacity: 1; transform: translateX(150px); } 16% { opacity: 0; transform: translateX(160px); }
-  100% { opacity: 0; transform: translateX(160px); } }
-@keyframes jbBlock { 0%, 16% { opacity: 0; transform: scale(.7); } 20% { opacity: 1; transform: scale(1.15); }
-  24%, 100% { opacity: 1; transform: scale(1); } }
-/* panel 2: ciphered slips through, gets decoded */
-@keyframes jbQ2 { 0%, 30% { opacity: 0; transform: translateX(0); } 34% { opacity: 1; }
-  40% { opacity: 1; transform: translateX(120px); } 44% { opacity: 0; transform: translateX(130px); }
-  100% { opacity: 0; } }
-@keyframes jbEnc { 0%, 40% { opacity: 0; transform: scale(.8); } 44% { opacity: 1; transform: scale(1.1); }
-  48%, 100% { opacity: 1; transform: scale(1); } }
-@keyframes jbCiph { 0%, 46% { opacity: 0; transform: translateX(-10px); } 50% { opacity: 1; transform: translateX(0); }
-  58% { opacity: 1; transform: translateX(150px); } 62% { opacity: 0; transform: translateX(160px); } 100% { opacity: 0; } }
-@keyframes jbPass { 0%, 58% { opacity: 0; } 62% { opacity: 1; } 100% { opacity: 1; } }
-@keyframes jbBrain { 0%, 64% { opacity: .35; } 68% { opacity: 1; } 74%, 100% { opacity: 1; } }
-@keyframes jbDec { 0%, 72% { opacity: 0; transform: translateX(-14px); } 78%, 100% { opacity: 1; transform: none; } }
-@keyframes jbAns { 0%, 84% { opacity: 0; transform: translateX(-14px); } 90%, 100% { opacity: 1; transform: none; } }
 </style>
 <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
   <!-- ============ panel 1: plaintext is blocked ============ -->
