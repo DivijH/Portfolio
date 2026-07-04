@@ -17,44 +17,55 @@ concepts per problem even at 100 samples.</p>
 <p>GuidedSampling splits inference into two explicit phases, so that <strong>what approach to try</strong>
 and <strong>how to execute it</strong> are sampled separately:</p>
 
-<figure class="gsa">
+<figure class="gsa play">
+<button class="gsa-replay" type="button" aria-label="Play the animation again"
+ onclick="var f=this.closest('figure');f.classList.remove('play');void f.offsetWidth;f.classList.add('play');">&#9654; play again</button>
 <style>
 .gsa svg text { font-family: 'JetBrains Mono', monospace; }
 .gsa .m-label { letter-spacing: 3px; }
 /* base state = final frame, so reduced-motion / no-animation shows everything */
 .gsa .af { opacity: 1; }
+.gsa { position: relative; }
+.gsa-replay { position: absolute; top: 1.05rem; right: 1.05rem; z-index: 2;
+  font-family: 'JetBrains Mono', monospace; font-size: .64rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted); background: rgba(6,5,16,.55);
+  border: 1px solid var(--border); border-radius: 4px; padding: .42rem .75rem;
+  cursor: pointer; transition: color .2s, border-color .2s; }
+.gsa-replay:hover { color: var(--accent); border-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .gsa-replay { display: none; } }
 @media (prefers-reduced-motion: no-preference) {
-  .gsa .af { animation-duration: 12s; animation-iteration-count: infinite; animation-timing-function: linear; }
-  .gsa .q  { animation-name: gsaQ; }
-  .gsa .mp { animation-name: gsaPulse; }
-  .gsa .a0 { animation-name: gsaA0; } .gsa .a1 { animation-name: gsaA1; }
-  .gsa .a2 { animation-name: gsaA2; } .gsa .a3 { animation-name: gsaA3; }
-  .gsa .a4 { animation-name: gsaA4; }
-  .gsa .n1 { animation-name: gsaN1; }
-  .gsa .c1 { animation-name: gsaC1; } .gsa .c2 { animation-name: gsaC2; } .gsa .c3 { animation-name: gsaC3; }
-  .gsa .r1 { animation-name: gsaR1; } .gsa .r2 { animation-name: gsaR2; }
-  .gsa .s1 { animation-name: gsaS1; } .gsa .s2 { animation-name: gsaS2; } .gsa .s3 { animation-name: gsaS3; }
-  .gsa .n2 { animation-name: gsaN2; }
+  .gsa.play .af { animation-duration: 12s; animation-iteration-count: 1;
+    animation-fill-mode: forwards; animation-timing-function: linear; }
+  .gsa.play .q  { animation-name: gsaQ; }
+  .gsa.play .mp { animation-name: gsaPulse; }
+  .gsa.play .a0 { animation-name: gsaA0; } .gsa.play .a1 { animation-name: gsaA1; }
+  .gsa.play .a2 { animation-name: gsaA2; } .gsa.play .a3 { animation-name: gsaA3; }
+  .gsa.play .a4 { animation-name: gsaA4; }
+  .gsa.play .n1 { animation-name: gsaN1; }
+  .gsa.play .c1 { animation-name: gsaC1; } .gsa.play .c2 { animation-name: gsaC2; } .gsa.play .c3 { animation-name: gsaC3; }
+  .gsa.play .r1 { animation-name: gsaR1; } .gsa.play .r2 { animation-name: gsaR2; }
+  .gsa.play .s1 { animation-name: gsaS1; } .gsa.play .s2 { animation-name: gsaS2; } .gsa.play .s3 { animation-name: gsaS3; }
+  .gsa.play .n2 { animation-name: gsaN2; }
 }
 @keyframes gsaQ { 0% { opacity: 0; transform: translateX(0); } 3% { opacity: 1; }
   9% { opacity: 1; transform: translateX(150px); } 12% { opacity: 0; transform: translateX(165px); }
   97% { opacity: 0; transform: translateX(165px); } 100% { opacity: 0; transform: translateX(0); } }
 @keyframes gsaPulse { 0%, 9% { opacity: 0; } 12%, 15% { opacity: 1; } 20%, 100% { opacity: 0; } }
-@keyframes gsaA0 { 0%, 15% { opacity: 0; transform: translateX(-36px); } 18%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaA1 { 0%, 18% { opacity: 0; transform: translateX(-36px); } 21%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaA2 { 0%, 21% { opacity: 0; transform: translateX(-36px); } 24%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaA3 { 0%, 24% { opacity: 0; transform: translateX(-36px); } 27%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaA4 { 0%, 27% { opacity: 0; transform: translateX(-36px); } 30%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaN1 { 0%, 32% { opacity: 0; } 36%, 94% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes gsaC1 { 0%, 15% { opacity: 0; transform: translateX(-36px); } 18%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaC2 { 0%, 26% { opacity: 0; transform: translateX(-36px); } 29%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaC3 { 0%, 37% { opacity: 0; transform: translateX(-36px); } 40%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes gsaA0 { 0%, 15% { opacity: 0; transform: translateX(-36px); } 18%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaA1 { 0%, 18% { opacity: 0; transform: translateX(-36px); } 21%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaA2 { 0%, 21% { opacity: 0; transform: translateX(-36px); } 24%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaA3 { 0%, 24% { opacity: 0; transform: translateX(-36px); } 27%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaA4 { 0%, 27% { opacity: 0; transform: translateX(-36px); } 30%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaN1 { 0%, 32% { opacity: 0; } 36%, 100% { opacity: 1; } }
+@keyframes gsaC1 { 0%, 15% { opacity: 0; transform: translateX(-36px); } 18%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaC2 { 0%, 26% { opacity: 0; transform: translateX(-36px); } 29%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaC3 { 0%, 37% { opacity: 0; transform: translateX(-36px); } 40%, 100% { opacity: 1; transform: none; } }
 @keyframes gsaR1 { 0%, 19% { opacity: 0; } 21%, 25% { opacity: 1; } 28%, 100% { opacity: 0; } }
 @keyframes gsaR2 { 0%, 30% { opacity: 0; } 32%, 36% { opacity: 1; } 39%, 100% { opacity: 0; } }
-@keyframes gsaS1 { 0%, 44% { opacity: 0; transform: translateX(-24px); } 48%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaS2 { 0%, 50% { opacity: 0; transform: translateX(-24px); } 54%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaS3 { 0%, 56% { opacity: 0; transform: translateX(-24px); } 60%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes gsaN2 { 0%, 62% { opacity: 0; } 66%, 94% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes gsaS1 { 0%, 44% { opacity: 0; transform: translateX(-24px); } 48%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaS2 { 0%, 50% { opacity: 0; transform: translateX(-24px); } 54%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaS3 { 0%, 56% { opacity: 0; transform: translateX(-24px); } 60%, 100% { opacity: 1; transform: none; } }
+@keyframes gsaN2 { 0%, 62% { opacity: 0; } 66%, 100% { opacity: 1; } }
 </style>
 <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg">
   <!-- ============ panel 1: repeated sampling ============ -->
