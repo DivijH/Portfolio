@@ -774,6 +774,17 @@ html.fx .lc-slide .lc-papers { min-height: 8.5rem; }
 .pub-longform .pub-note { font-family: var(--font-mono); font-size: .74rem; color: var(--faint);
     border-left: 2px solid var(--ember); padding: .3rem 0 .3rem .9rem; margin-top: 2rem; }
 .pub-longform .pub-dim { color: var(--faint); }
+.pub-longform .hf-link {
+    display: inline-flex; align-items: center; gap: .55rem; margin: 0 0 1.1rem;
+    font-family: var(--font-mono); font-size: .8rem; letter-spacing: .04em; color: var(--text);
+    background: rgba(255, 210, 30, .07); border: 1px solid rgba(255, 210, 30, .3);
+    border-radius: 6px; padding: .55rem 1rem;
+    transition: border-color .2s, background-color .2s;
+}
+.pub-longform .hf-link:hover { border-color: rgba(255, 210, 30, .7); background: rgba(255, 210, 30, .12); }
+.pub-longform .lead-note { color: var(--faint); font-size: .82rem; font-family: var(--font-mono); margin-top: .8rem; }
+.pub-longform td.rank { color: var(--faint); font-family: var(--font-mono); width: 2rem; }
+.pub-longform td.avg { color: var(--accent); font-weight: 600; }
 
 /* ============================================================
    Contact
