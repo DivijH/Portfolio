@@ -771,6 +771,8 @@ html.fx .lc-slide .lc-papers { min-height: 8.5rem; }
 .pub-longform tr.hl td { background: var(--accent-soft); color: var(--text); }
 .pub-longform td.up { color: #34d399; }
 .pub-longform td.down { color: var(--ember); }
+.pub-longform .pub-note { font-family: var(--font-mono); font-size: .74rem; color: var(--faint);
+    border-left: 2px solid var(--ember); padding: .3rem 0 .3rem .9rem; margin-top: 2rem; }
 
 /* ============================================================
    Contact

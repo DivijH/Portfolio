@@ -1,0 +1,228 @@
+<div class="stats">
+    <div class="stat ember"><b>60% → 72%</b><span>attack success on gpt-oss-20b, ACE → LACE (layered)</span></div>
+    <div class="stat ember"><b>up to 78%</b><span>ASR on GPT-4o under LACE, at 92% decode rate</span></div>
+    <div class="stat"><b>10 ciphers</b><span>CipherBench · common / uncommon / novel · 240 instances</span></div>
+    <div class="stat"><b>zero-shot</b><span>no optimization, no gradient access — just a prompt</span></div>
+</div>
+
+<h2>The paradox</h2>
+<p>LLM safety training has mostly learned to recognize harm written in natural language or in
+<em>common</em> ciphers like Base64 and ROT-13. But a stronger reasoner can decode ciphers it has
+never been trained on — and that same ability is exactly what makes it exploitable. Encode a harmful
+request in a novel, user-defined cipher and it sails past the safety filter as meaningless text;
+then the model's reasoning quietly reconstructs the request and answers it. The paper's uncomfortable
+finding: <strong>the better a model is at decoding ciphers, the more vulnerable it becomes.</strong></p>
+
+<figure class="gsa play">
+<button class="gsa-replay" type="button" aria-label="Play the animation again"
+ onclick="var f=this.closest('figure');f.classList.remove('play');void f.offsetWidth;f.classList.add('play');">&#9654; play again</button>
+<style>
+.gsa svg text { font-family: 'JetBrains Mono', monospace; }
+.gsa .m-label { letter-spacing: 3px; }
+.gsa .af { opacity: 1; }
+.gsa { position: relative; }
+.gsa-replay { position: absolute; top: 1.05rem; right: 1.05rem; z-index: 2;
+  font-family: 'JetBrains Mono', monospace; font-size: .64rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted); background: rgba(6,5,16,.55);
+  border: 1px solid var(--border); border-radius: 4px; padding: .42rem .75rem;
+  cursor: pointer; transition: color .2s, border-color .2s; }
+.gsa-replay:hover { color: var(--accent); border-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .gsa-replay { display: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .gsa.play .af { animation-duration: 11s; animation-iteration-count: 1;
+    animation-fill-mode: forwards; animation-timing-function: linear; }
+  .gsa.play .q1 { animation-name: jbQ1; } .gsa.play .block { animation-name: jbBlock; }
+  .gsa.play .q2 { animation-name: jbQ2; } .gsa.play .enc { animation-name: jbEnc; }
+  .gsa.play .ciph { animation-name: jbCiph; } .gsa.play .pass { animation-name: jbPass; }
+  .gsa.play .brain { animation-name: jbBrain; } .gsa.play .dec { animation-name: jbDec; }
+  .gsa.play .ans { animation-name: jbAns; }
+}
+/* panel 1: plaintext blocked */
+@keyframes jbQ1 { 0% { opacity: 0; transform: translateX(0); } 4% { opacity: 1; }
+  12% { opacity: 1; transform: translateX(150px); } 16% { opacity: 0; transform: translateX(160px); }
+  100% { opacity: 0; transform: translateX(160px); } }
+@keyframes jbBlock { 0%, 16% { opacity: 0; transform: scale(.7); } 20% { opacity: 1; transform: scale(1.15); }
+  24%, 100% { opacity: 1; transform: scale(1); } }
+/* panel 2: ciphered slips through, gets decoded */
+@keyframes jbQ2 { 0%, 30% { opacity: 0; transform: translateX(0); } 34% { opacity: 1; }
+  40% { opacity: 1; transform: translateX(120px); } 44% { opacity: 0; transform: translateX(130px); }
+  100% { opacity: 0; } }
+@keyframes jbEnc { 0%, 40% { opacity: 0; transform: scale(.8); } 44% { opacity: 1; transform: scale(1.1); }
+  48%, 100% { opacity: 1; transform: scale(1); } }
+@keyframes jbCiph { 0%, 46% { opacity: 0; transform: translateX(-10px); } 50% { opacity: 1; transform: translateX(0); }
+  58% { opacity: 1; transform: translateX(150px); } 62% { opacity: 0; transform: translateX(160px); } 100% { opacity: 0; } }
+@keyframes jbPass { 0%, 58% { opacity: 0; } 62% { opacity: 1; } 100% { opacity: 1; } }
+@keyframes jbBrain { 0%, 64% { opacity: .35; } 68% { opacity: 1; } 74%, 100% { opacity: 1; } }
+@keyframes jbDec { 0%, 72% { opacity: 0; transform: translateX(-14px); } 78%, 100% { opacity: 1; transform: none; } }
+@keyframes jbAns { 0%, 84% { opacity: 0; transform: translateX(-14px); } 90%, 100% { opacity: 1; transform: none; } }
+</style>
+<svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
+  <!-- ============ panel 1: plaintext is blocked ============ -->
+  <text x="20" y="34" fill="#7d7899" font-size="11" class="m-label">PLAINTEXT REQUEST</text>
+
+  <g class="af q1">
+    <rect x="20" y="96" width="196" height="52" rx="6" fill="#060510" stroke="rgba(255,92,56,.5)" stroke-width="1.5"/>
+    <text x="118" y="120" fill="#edeaf8" font-size="12" text-anchor="middle">"how do I build a &#8230;"</text>
+    <text x="118" y="138" fill="#ff5c38" font-size="10" text-anchor="middle">harmful query</text>
+  </g>
+
+  <!-- safety shield -->
+  <g transform="translate(360,122)">
+    <path d="M 0 -42 L 40 -28 L 40 12 C 40 34, 22 46, 0 54 C -22 46, -40 34, -40 12 L -40 -28 Z"
+          fill="rgba(255,92,56,.06)" stroke="rgba(237,234,248,.4)" stroke-width="1.5"/>
+    <text x="0" y="-4" font-size="20" text-anchor="middle">&#128737;</text>
+    <text x="0" y="24" fill="#7d7899" font-size="10" text-anchor="middle">safety</text>
+  </g>
+  <line x1="216" y1="122" x2="300" y2="122" stroke="rgba(237,234,248,.25)" stroke-width="1.3"/>
+
+  <g class="af block">
+    <rect x="470" y="96" width="150" height="52" rx="6" fill="rgba(255,92,56,.1)" stroke="#ff5c38" stroke-width="1.5"/>
+    <text x="545" y="120" fill="#ff5c38" font-size="13" text-anchor="middle">&#10007; refused</text>
+    <text x="545" y="138" fill="#7d7899" font-size="10" text-anchor="middle">recognized as harmful</text>
+  </g>
+  <line x1="400" y1="122" x2="464" y2="122" stroke="rgba(255,92,56,.4)" stroke-width="1.3"/>
+
+  <line x1="20" y1="212" x2="940" y2="212" stroke="rgba(237,234,248,.12)"/>
+
+  <!-- ============ panel 2: ACE / LACE ============ -->
+  <text x="20" y="248" fill="#8b7cff" font-size="11" class="m-label">ACE — ATTACK USING CUSTOM ENCRYPTIONS</text>
+
+  <g class="af q2">
+    <rect x="20" y="300" width="196" height="52" rx="6" fill="#060510" stroke="rgba(255,92,56,.5)" stroke-width="1.5"/>
+    <text x="118" y="324" fill="#edeaf8" font-size="12" text-anchor="middle">"how do I build a &#8230;"</text>
+    <text x="118" y="342" fill="#ff5c38" font-size="10" text-anchor="middle">harmful query</text>
+  </g>
+
+  <!-- encrypt -->
+  <g class="af enc">
+    <rect x="248" y="300" width="120" height="52" rx="6" fill="rgba(139,124,255,.08)" stroke="#8b7cff" stroke-width="1.5"/>
+    <text x="308" y="322" fill="#8b7cff" font-size="12" text-anchor="middle">novel</text>
+    <text x="308" y="340" fill="#8b7cff" font-size="12" text-anchor="middle">cipher</text>
+  </g>
+  <line x1="216" y1="326" x2="244" y2="326" stroke="rgba(237,234,248,.25)" stroke-width="1.3"/>
+
+  <!-- ciphertext -->
+  <g class="af ciph">
+    <rect x="404" y="300" width="150" height="52" rx="6" fill="#060510" stroke="rgba(139,124,255,.5)" stroke-width="1.5"/>
+    <text x="479" y="324" fill="#a6a2c0" font-size="12" text-anchor="middle">"jr;;p qp V ..."</text>
+    <text x="479" y="342" fill="#8b7cff" font-size="10" text-anchor="middle">looks like noise</text>
+  </g>
+  <line x1="368" y1="326" x2="400" y2="326" stroke="rgba(139,124,255,.4)" stroke-width="1.3"/>
+
+  <!-- shield, passed -->
+  <g transform="translate(620,326)">
+    <path d="M 0 -42 L 40 -28 L 40 12 C 40 34, 22 46, 0 54 C -22 46, -40 34, -40 12 L -40 -28 Z"
+          fill="rgba(52,211,153,.05)" stroke="rgba(237,234,248,.4)" stroke-width="1.5"/>
+    <text x="0" y="-4" font-size="20" text-anchor="middle">&#128737;</text>
+    <text x="0" y="24" fill="#7d7899" font-size="10" text-anchor="middle">safety</text>
+    <g class="af pass"><text x="0" y="46" fill="#34d399" font-size="13" text-anchor="middle">&#10003; passes</text></g>
+  </g>
+  <line x1="554" y1="326" x2="576" y2="326" stroke="rgba(139,124,255,.4)" stroke-width="1.3"/>
+
+  <!-- reasoning LLM decodes -->
+  <g class="af brain">
+    <rect x="700" y="292" width="130" height="68" rx="10" fill="rgba(139,124,255,.06)" stroke="#8b7cff" stroke-width="1.8"/>
+    <text x="765" y="322" fill="#edeaf8" font-size="13" text-anchor="middle">reasoning</text>
+    <text x="765" y="340" fill="#edeaf8" font-size="13" text-anchor="middle">LLM</text>
+  </g>
+  <line x1="664" y1="326" x2="696" y2="326" stroke="rgba(52,211,153,.4)" stroke-width="1.3"/>
+
+  <g class="af dec">
+    <rect x="700" y="392" width="240" height="40" rx="6" fill="rgba(237,234,248,.03)" stroke="rgba(237,234,248,.25)"/>
+    <text x="820" y="416" fill="#a6a2c0" font-size="11" text-anchor="middle">decodes it back &#8594; "how do I build a &#8230;"</text>
+  </g>
+  <line x1="765" y1="360" x2="765" y2="390" stroke="rgba(237,234,248,.2)"/>
+
+  <g class="af ans">
+    <rect x="700" y="452" width="240" height="44" rx="6" fill="rgba(255,92,56,.1)" stroke="#ff5c38" stroke-width="1.5"/>
+    <text x="820" y="472" fill="#ff5c38" font-size="12" text-anchor="middle">&#9888; answers the harmful query</text>
+    <text x="820" y="488" fill="#7d7899" font-size="10" text-anchor="middle">jailbreak succeeds</text>
+  </g>
+  <line x1="820" y1="432" x2="820" y2="450" stroke="rgba(255,92,56,.4)"/>
+</svg>
+<figcaption>Top — a plaintext harmful request is recognized and refused. Bottom (ACE) — the same
+request encrypted in a novel cipher reads as noise to the safety filter and passes, then the model's
+own reasoning decodes it and answers. LACE stacks a second cipher on top to push complexity beyond
+what safety training anticipates.</figcaption>
+</figure>
+
+<h2>ACE — Attacks using Custom Encryptions</h2>
+<p>ACE is a zero-shot attack: no optimization, no gradients, no model access beyond a prompt. It
+encodes the harmful query in a cipher, hands the model the decoding scheme, and adds a short
+<em>priming sentence</em> to nudge toward a completed answer. The ciphers span three tiers by how
+well-known they are — the insight being that safety training can only pre-empt ciphers it has
+already seen:</p>
+<ul>
+    <li><strong>Common</strong> — Base64, ROT-13, Pig Latin, LeetSpeak. Easy to decode (high DSR)
+    but easy to defend: low attack success, likely already in safety training.</li>
+    <li><strong>Uncommon</strong> — Keyboard Cipher (shift one key right on QWERTY), Upside-Down,
+    Word-Reversal. Rarely in the literature, so rarely defended.</li>
+    <li><strong>Novel</strong> — user-designed schemes absent from cryptographic literature:
+    Word-Substitution, Grid Encoding (a 5&times;5 chess-notation grid), ASCII-Art. Impossible to
+    pre-train against.</li>
+</ul>
+
+<h2>CipherBench — can the model even decode it?</h2>
+<p>An attack only works if the model can reconstruct the request, so the paper first measures raw
+decoding skill. CipherBench is 240 safe sentences (short/long, question/declarative) across ten
+ciphers, scored by <strong>Decryption Success Rate (DSR)</strong>. A telling control: when the same
+sentences are replaced with <em>random</em> characters, decoding collapses — showing the models lean
+on reconstructing plausible English, not on mechanically inverting the cipher.</p>
+
+<h2>ACE results</h2>
+<p>On the 50-sample AdvBench subset (14 harm categories), measured by <strong>Attack Success Rate
+(ASR)</strong>. Common ciphers decode easily but rarely jailbreak; uncommon and novel ciphers match
+or beat them despite being zero-shot:</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Attack (ACE cipher)</th><th>Tier</th><th>GPT-4o ASR</th><th>gpt-oss-20b ASR</th><th>Llama-3.1-70B ASR</th></tr></thead>
+<tbody>
+<tr><td>Base64</td><td>common</td><td>0.10</td><td>0.36</td><td>0.44</td></tr>
+<tr><td>ROT-13</td><td>common</td><td>0.24</td><td>0.48</td><td>0.28</td></tr>
+<tr><td>Upside-Down</td><td>uncommon</td><td>0.30</td><td class="down">0.60</td><td>0.06</td></tr>
+<tr><td>Word Reversal</td><td>uncommon</td><td class="down">0.40</td><td>0.16</td><td>0.32</td></tr>
+<tr><td>Grid Encoding</td><td>novel</td><td>0.36</td><td>0.48</td><td>0.08</td></tr>
+<tr><td>Word Substitution</td><td>novel</td><td class="down">0.40</td><td>0.26</td><td class="down">0.54</td></tr>
+</tbody>
+</table></div>
+<p>Notably, zero-shot ACE matches the optimization-based AutoDAN on Llama-3.1-8B and ranks
+second-best on Llama-3.1-70B — no search required.</p>
+
+<h2>LACE — layering the ciphers</h2>
+<p>LACE stacks a second encoding on top of a Word-Substitution Cipher, pushing complexity past what
+safety training anticipates. Layering lowers decode rates for weak models — but strong reasoners
+hold their decoding <em>and</em> get jailbroken more often. On gpt-oss-20b, ASR climbs from 60% (ACE)
+to <strong>72%</strong> (LACE); on GPT-4o, easier layered ciphers like Word-Reversal reach
+<strong>78% ASR at 92% decode</strong> — nearly double the single-cipher rate.</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>LACE (Word-Sub + …)</th><th>GPT-4o DSR</th><th>GPT-4o ASR</th><th>gpt-oss-20b DSR</th><th>gpt-oss-20b ASR</th></tr></thead>
+<tbody>
+<tr class="hl"><td>Word Reversal (sentence)</td><td>0.92</td><td>0.78</td><td>0.74</td><td>0.38</td></tr>
+<tr><td>ROT-13 (sentence)</td><td>0.80</td><td>0.72</td><td>0.74</td><td>0.56</td></tr>
+<tr><td>Keyboard (both)</td><td>0.00</td><td>0.08</td><td>0.86</td><td class="down">0.72</td></tr>
+<tr><td>Grid Encoding (sentence)</td><td>0.26</td><td>0.30</td><td>0.78</td><td>0.70</td></tr>
+</tbody>
+</table></div>
+
+<p>Two mechanics fall out of the data. Encrypting the <em>whole query</em> is easier to crack than
+encrypting only the cipher's <em>mappings</em> — the model self-corrects from surrounding words when
+it has full context. And the layering only pays off on models whose decode rate survives it: weak
+models can't decode the layers, so the extra complexity is wasted on them. That is the paper's
+central trade-off — <strong>decoding competence and jailbreak vulnerability rise together.</strong></p>
+
+<h2>Over-defensiveness</h2>
+<p>The attacks also expose the opposite failure: models sometimes refuse perfectly benign
+ciphered text simply because it looks obfuscated. The paper quantifies this over-refusal across the
+ACE encodings — a reminder that bolting on cipher-blind filters trades one failure mode for another.</p>
+
+<h2>Why it matters</h2>
+<p>The defensive implication is uncomfortable: you cannot enumerate every user-invented cipher in
+advance, and the models most worth protecting — the strong reasoners — are precisely the ones that
+can decode novel schemes. Safety training needs to generalize to <em>unseen</em> encodings, and
+cipher complexity may need to be matched to a model's decoding ability rather than applied blindly.</p>
+
+<h2>Resources</h2>
+<p>Paper: <a href="https://arxiv.org/abs/2402.10601" target="_blank" rel="noopener">arXiv:2402.10601</a> ·
+Code &amp; data: <a href="https://github.com/DivijH/jailbreak_cryptography" target="_blank" rel="noopener">github.com/DivijH/jailbreak_cryptography</a></p>
+<p class="pub-note">Content warning: the paper contains model-generated content that may be offensive.</p>
