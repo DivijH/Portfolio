@@ -107,7 +107,7 @@ class Command(BaseCommand):
                  authors='Divij Handa, Zehua Zhang, Amir Saeidi, Shrinidhi Kumbhar, '
                          'Md Nayem Uddin, Aswin RRV, Chitta Baral',
                  venue='NeurIPS 2025 Workshop (Reliable ML from Unreliable Data)', year=2025, month=12,
-                 kind=P.WORKSHOP, stage=S.EVAL_SAFETY, featured=True, arxiv_url='https://arxiv.org/abs/2402.10601',
+                 kind=P.WORKSHOP, stage=S.EVAL_SAFETY, featured=True, arxiv_url='https://openreview.net/forum?id=7ddhbe1YyX',
                  abstract='Shows that as LLMs get better at reasoning they become more susceptible to novel '
                           'jailbreaks. Introduces ACE and LACE — attacks that encode malicious queries with '
                           'custom and layered ciphers — and CipherBench to measure cipher-decoding ability.',
@@ -208,7 +208,7 @@ class Command(BaseCommand):
             (datetime.date(2026, 1, 22), 'GuidedSampling accepted at ICLR 2026.',
              'https://openreview.net/forum?id=TD9jC48sts'),
             (datetime.date(2025, 10, 1), 'Work on jailbreaking LLMs via novel ciphers accepted at the '
-             'NeurIPS 2025 Workshop on Reliable ML from Unreliable Data.', 'https://arxiv.org/abs/2402.10601'),
+             'NeurIPS 2025 Workshop on Reliable ML from Unreliable Data.', 'https://openreview.net/forum?id=7ddhbe1YyX'),
             (datetime.date(2025, 8, 20), 'ThinkTuning accepted at EMNLP 2025.', 'https://arxiv.org/abs/2508.07616'),
             (datetime.date(2025, 5, 15), 'UnSeenTimeQA accepted at ACL 2025.', 'https://arxiv.org/abs/2407.03525'),
             (datetime.date(2025, 1, 22), 'ActionReasoningBench accepted at ICLR 2025.',
