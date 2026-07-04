@@ -1,0 +1,195 @@
+<div class="stats">
+    <div class="stat"><b>+21.98%</b><span>mean query fitness over the original user query</span></div>
+    <div class="stat"><b>+3.36%</b><span>over a strong Best-of-N LLM-rewrite baseline</span></div>
+    <div class="stat"><b>1,000 queries</b><span>real Etsy searches · 5 categories · multilingual</span></div>
+    <div class="stat ember"><b>r = 0.552</b><span>agent–human correlation ≈ human–human (0.532)</span></div>
+</div>
+
+<h2>The problem: evaluating the un-verifiable</h2>
+<p>LLMs shine on tasks with a checkable answer — code that runs, math that resolves. E-commerce
+<strong>query rewriting</strong> has no such gold standard: whether a rewrite truly captures what a
+shopper meant is subjective and latent. A static reward model or a single LLM-judge is brittle here,
+and a lone unguided rewrite often lands <em>worse</em> than the user's original query. OptAgent's
+idea: if you can't verify the answer, <strong>simulate the customer</strong> — many of them — and let
+their collective behavior become the reward.</p>
+
+<figure class="gsa">
+<style>
+.gsa svg text { font-family: 'JetBrains Mono', monospace; }
+.gsa .m-label { letter-spacing: 3px; }
+</style>
+<svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
+  <!-- ============ band 1: evolutionary loop ============ -->
+  <text x="20" y="30" fill="#8b7cff" font-size="11" class="m-label">EVOLUTIONARY OPTIMIZATION</text>
+
+  <!-- user query -->
+  <rect x="20" y="78" width="110" height="46" rx="6" fill="#060510" stroke="rgba(237,234,248,.4)" stroke-width="1.5"/>
+  <text x="75" y="100" fill="#edeaf8" font-size="12" text-anchor="middle">user query</text>
+  <text x="75" y="116" fill="#7d7899" font-size="10" text-anchor="middle">q&#8320;</text>
+  <line x1="130" y1="101" x2="162" y2="101" stroke="rgba(237,234,248,.28)" stroke-width="1.3"/>
+
+  <!-- rephrase -->
+  <rect x="164" y="78" width="104" height="46" rx="6" fill="rgba(139,124,255,.08)" stroke="#8b7cff" stroke-width="1.5"/>
+  <text x="216" y="100" fill="#8b7cff" font-size="12" text-anchor="middle">rephrase</text>
+  <text x="216" y="116" fill="#8b7cff" font-size="10" text-anchor="middle">&#215; N</text>
+  <line x1="268" y1="101" x2="300" y2="101" stroke="rgba(237,234,248,.28)" stroke-width="1.3"/>
+
+  <!-- generation population -->
+  <rect x="302" y="58" width="168" height="120" rx="8" fill="rgba(139,124,255,.04)" stroke="rgba(139,124,255,.35)" stroke-dasharray="5 5"/>
+  <text x="386" y="78" fill="#8b7cff" font-size="10" text-anchor="middle" class="m-label">GENERATION</text>
+  <rect x="318" y="88" width="136" height="16" rx="3" fill="none" stroke="rgba(237,234,248,.3)"/>
+  <rect x="318" y="108" width="136" height="16" rx="3" fill="none" stroke="rgba(237,234,248,.3)"/>
+  <rect x="318" y="128" width="136" height="16" rx="3" fill="none" stroke="rgba(237,234,248,.3)"/>
+  <rect x="318" y="148" width="136" height="16" rx="3" fill="none" stroke="rgba(237,234,248,.3)"/>
+  <text x="386" y="100" fill="#a6a2c0" font-size="9" text-anchor="middle">candidate rewrite</text>
+  <text x="386" y="140" fill="#5b5677" font-size="10" text-anchor="middle">N = 5</text>
+  <line x1="470" y1="118" x2="502" y2="118" stroke="rgba(237,234,248,.28)" stroke-width="1.3"/>
+
+  <!-- fitness (links to band 2) -->
+  <rect x="504" y="92" width="150" height="52" rx="8" fill="rgba(52,211,153,.05)" stroke="#34d399" stroke-width="1.6"/>
+  <text x="579" y="114" fill="#34d399" font-size="12" text-anchor="middle">multi-agent</text>
+  <text x="579" y="130" fill="#34d399" font-size="12" text-anchor="middle">fitness F(q)</text>
+  <line x1="654" y1="118" x2="686" y2="118" stroke="rgba(52,211,153,.4)" stroke-width="1.3"/>
+
+  <!-- select -->
+  <rect x="688" y="92" width="120" height="52" rx="6" fill="#060510" stroke="rgba(237,234,248,.4)" stroke-width="1.5"/>
+  <text x="748" y="114" fill="#edeaf8" font-size="12" text-anchor="middle">select</text>
+  <text x="748" y="130" fill="#7d7899" font-size="10" text-anchor="middle">top parents</text>
+
+  <!-- best query out -->
+  <line x1="808" y1="118" x2="840" y2="118" stroke="rgba(52,211,153,.4)" stroke-width="1.3"/>
+  <rect x="842" y="92" width="104" height="52" rx="6" fill="rgba(52,211,153,.08)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="894" y="114" fill="#34d399" font-size="12" text-anchor="middle">best</text>
+  <text x="894" y="130" fill="#34d399" font-size="10" text-anchor="middle">rewrite</text>
+
+  <!-- breed -->
+  <rect x="560" y="206" width="200" height="46" rx="6" fill="rgba(139,124,255,.08)" stroke="#8b7cff" stroke-width="1.5"/>
+  <text x="660" y="234" fill="#8b7cff" font-size="12" text-anchor="middle">crossover + mutation</text>
+  <!-- select down to breed -->
+  <path d="M 748 144 L 748 229 L 762 229" fill="none" stroke="rgba(237,234,248,.28)" stroke-width="1.3"/>
+  <!-- breed arc back to generation -->
+  <path d="M 560 229 L 386 229 L 386 182" fill="none" stroke="#8b7cff" stroke-width="1.3" stroke-dasharray="6 5"/>
+  <polygon points="381,188 386,178 391,188" fill="#8b7cff"/>
+  <text x="470" y="222" fill="#7d7899" font-size="10" text-anchor="middle">&#215; G generations</text>
+
+  <line x1="20" y1="288" x2="940" y2="288" stroke="rgba(237,234,248,.12)"/>
+
+  <!-- ============ band 2: multi-agent simulation ============ -->
+  <text x="20" y="322" fill="#34d399" font-size="11" class="m-label">MULTI-AGENT SHOPPER SIMULATION — THE FITNESS SIGNAL</text>
+
+  <!-- one candidate query -->
+  <rect x="20" y="392" width="110" height="46" rx="6" fill="#060510" stroke="rgba(139,124,255,.5)" stroke-width="1.5"/>
+  <text x="75" y="414" fill="#a6a2c0" font-size="12" text-anchor="middle">candidate</text>
+  <text x="75" y="430" fill="#8b7cff" font-size="10" text-anchor="middle">query q</text>
+
+  <!-- K agents at different temperatures -->
+  <g font-size="11">
+    <rect x="176" y="352" width="196" height="26" rx="5" fill="rgba(52,211,153,.05)" stroke="rgba(52,211,153,.5)"/>
+    <text x="188" y="369" fill="#a6a2c0" text-anchor="start">shopper agent &#183; T = 0.00</text>
+    <rect x="176" y="384" width="196" height="26" rx="5" fill="rgba(52,211,153,.05)" stroke="rgba(52,211,153,.5)"/>
+    <text x="188" y="401" fill="#a6a2c0" text-anchor="start">shopper agent &#183; T = 0.25</text>
+    <rect x="176" y="416" width="196" height="26" rx="5" fill="rgba(52,211,153,.05)" stroke="rgba(52,211,153,.5)"/>
+    <text x="188" y="433" fill="#a6a2c0" text-anchor="start">shopper agent &#183; T = 0.50</text>
+    <rect x="176" y="448" width="196" height="26" rx="5" fill="rgba(52,211,153,.05)" stroke="rgba(52,211,153,.5)"/>
+    <text x="188" y="465" fill="#5b5677" text-anchor="start">&#8230; up to T = 1.00 (K = 5)</text>
+  </g>
+  <line x1="130" y1="415" x2="172" y2="415" stroke="rgba(139,124,255,.4)" stroke-width="1.3"/>
+
+  <!-- score + purchase -->
+  <rect x="418" y="380" width="188" height="70" rx="8" fill="rgba(237,234,248,.03)" stroke="rgba(237,234,248,.28)"/>
+  <text x="512" y="404" fill="#edeaf8" font-size="11" text-anchor="middle">search &amp; score products</text>
+  <text x="512" y="421" fill="#7d7899" font-size="11" text-anchor="middle">relevance {&#8722;1, 0, +1}</text>
+  <text x="512" y="438" fill="#7d7899" font-size="11" text-anchor="middle">+ purchase decision</text>
+  <line x1="372" y1="415" x2="414" y2="415" stroke="rgba(52,211,153,.4)" stroke-width="1.3"/>
+
+  <!-- aggregate to fitness -->
+  <line x1="606" y1="415" x2="648" y2="415" stroke="rgba(52,211,153,.4)" stroke-width="1.3"/>
+  <rect x="650" y="388" width="150" height="54" rx="8" fill="rgba(52,211,153,.06)" stroke="#34d399" stroke-width="1.6"/>
+  <text x="725" y="410" fill="#34d399" font-size="12" text-anchor="middle">average &#8594;</text>
+  <text x="725" y="428" fill="#34d399" font-size="13" text-anchor="middle">F(q)</text>
+  <text x="820" y="419" fill="#5b5677" font-size="10" text-anchor="start">back to</text>
+  <text x="820" y="432" fill="#5b5677" font-size="10" text-anchor="start">the loop &#8593;</text>
+</svg>
+<figcaption>OptAgent seeds a population by rephrasing the user's query, scores each candidate with a
+multi-agent shopper simulation, keeps the fittest as parents, and breeds the next generation by
+crossover and mutation — repeating for G generations. The fitness signal (bottom) is an ensemble of
+K LLM shoppers, each run at a different sampling temperature, that search, rate product relevance,
+and decide what to buy; their averaged behavior is F(q).</figcaption>
+</figure>
+
+<h2>The fitness signal: a jury of simulated shoppers</h2>
+<p>Rather than one judge, OptAgent evaluates a rewrite with an ensemble of <code>K = 5</code> agents.
+Each agent submits the query to the real search interface, parses the first page of results
+(dropping sponsored listings), and for every product weighs the title, description, image, price,
+rating, first reviews and shipping. It then assigns a relevance score in
+<code>{&minus;1, 0, +1}</code> — Irrelevant / Partially Relevant / Fully Relevant — and makes an
+actual purchase decision. Averaging semantic scores across agents, plus a normalized purchase value
+(with diminishing returns), yields a single continuous fitness <code>F(q)</code>.</p>
+
+<h3>Temperatures, not personas</h3>
+<p>A natural way to get diverse judges is to give each a persona — but the paper found personas smuggle
+in bias: a benign trait can tip an agent into discriminatory scoring (documented as a case study).
+OptAgent instead diversifies by <strong>sampling temperature</strong> — the K agents run at
+<code>{0.00, 0.25, 0.50, 0.75, 1.00}</code> — spreading reasoning paths without injecting a
+predefined identity. The ensemble tracks people well: it correlates with human annotators at
+<strong>Pearson r = 0.552</strong>, essentially the same as annotators agree with <em>each other</em>
+(r = 0.532) — expected, since the task is genuinely subjective.</p>
+
+<h2>The optimizer: a genetic search over rewrites</h2>
+<p>With a fitness function in hand, OptAgent treats rewriting as evolutionary search. The user's query
+is rephrased into an initial population (<code>N = 5</code>); each generation, candidates are scored,
+the top ones become parents, and the next generation is bred by <strong>crossover</strong> (mixing two
+parents) and <strong>mutation</strong> (altering one), for <code>G = 4</code> generations. Guided
+search explores the space more effectively than one-shot sampling — best fitness climbs each
+generation with diminishing returns. Run on Gemini-2.5-Flash.</p>
+
+<h2>Results</h2>
+<p>Evaluated on 1,000 real Etsy queries across five categories, scored by mean fitness. OptAgent wins
+every category; parenthesized numbers are its gain over the strong Best-of-N baseline:</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Query type</th><th>User query</th><th>LLM-rewrite</th><th>Best-of-N</th><th>OptAgent</th></tr></thead>
+<tbody>
+<tr><td>Head</td><td>0.643</td><td>0.574</td><td>0.749</td><td>0.766 <span style="color:#34d399">(+2.2%)</span></td></tr>
+<tr><td>Torso</td><td>0.574</td><td>0.534</td><td>0.711</td><td>0.738 <span style="color:#34d399">(+3.8%)</span></td></tr>
+<tr><td>Tail</td><td>0.498</td><td>0.484</td><td>0.613</td><td>0.641 <span style="color:#34d399">(+4.5%)</span></td></tr>
+<tr><td>Fandom</td><td>0.733</td><td>0.634</td><td>0.776</td><td>0.797 <span style="color:#34d399">(+2.7%)</span></td></tr>
+<tr><td>Multilingual</td><td>0.719</td><td>0.683</td><td>0.826</td><td>0.855 <span style="color:#34d399">(+3.5%)</span></td></tr>
+<tr class="hl"><td>All queries</td><td>0.610</td><td>0.551</td><td>0.720</td><td>0.744 <span style="color:#34d399">(+3.4%)</span></td></tr>
+</tbody>
+</table></div>
+
+<p>Two findings stand out. A naive <strong>LLM-rewrite often underperforms the original query</strong>
+— an unguided rewrite easily misreads intent — which is exactly why generate-many-then-verify matters.
+And the biggest gains come on <strong>Tail queries</strong> (+28.7% over the user's original): rare,
+data-sparse searches where there's no historical pattern to learn from are where evolutionary
+exploration helps most. Fandom queries gain least (+8.7%) — franchise searches are already precise.</p>
+
+<h2>What each piece contributes</h2>
+<p>Ablating components on the full dataset shows the evolutionary machinery — not just having a good
+judge — carries the result:</p>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Configuration</th><th>Fitness</th><th>Δ vs OptAgent</th></tr></thead>
+<tbody>
+<tr class="hl"><td>OptAgent (full framework)</td><td>0.744</td><td>—</td></tr>
+<tr><td>− evolutionary ops (= Best-of-N)</td><td>0.697</td><td class="down">−6.4%</td></tr>
+<tr><td>− crossover</td><td>0.699</td><td class="down">−6.1%</td></tr>
+<tr><td>− mutation</td><td>0.742</td><td class="down">−0.3%</td></tr>
+</tbody>
+</table></div>
+
+<p>Crossover does the heavy lifting; mutation is a light touch. And a nice sanity check on realism:
+like real shoppers, the simulated agents disproportionately buy products ranked near the top of the
+results — a positional bias the framework reproduces rather than launders away.</p>
+
+<h2>Why it matters</h2>
+<p>OptAgent is a recipe for optimizing against subjective, un-verifiable objectives: replace the
+missing gold label with a <em>simulation</em> of the humans you're trying to satisfy, make that
+simulation a fitness function, and let evolutionary search do the rest. Query rewriting is the
+testbed, but the pattern — many diverse simulated users as a dynamic reward — travels to any setting
+where "is this actually better?" can't be checked with a formula.</p>
+
+<h2>Resources</h2>
+<p>Paper: <a href="https://arxiv.org/abs/2510.03771" target="_blank" rel="noopener">arXiv:2510.03771</a>
+<span class="pub-dim">· work done during an internship at Etsy</span></p>
