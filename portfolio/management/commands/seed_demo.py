@@ -218,14 +218,21 @@ class Command(BaseCommand):
             models.News.objects.create(date=d, content=content, url=url)
         self.stdout.write(self.style.SUCCESS(f'✓ {len(news)} news items'))
 
-        # ---- Experience (from ASU profile + LinkedIn; verify dates in admin) --
+        # ---- Experience (top three from CV; Nagarro roles are older, kept as-is) --
         models.Experience.objects.all().delete()
         experiences = [
-            ('Adobe', 'Research Scientist Intern', 'College Park, MD', 'May 2025', 'Aug 2025',
-             'Research internship on large language models and generative AI.'),
-            ('Arizona State University', 'Graduate Research Assistant', 'Tempe, AZ', 'Aug 2022', 'Present',
-             'LLM-agent research spanning data generation, training, test-time methods, and evaluation & '
-             'safety, with first-author papers at ICLR and NeurIPS workshops.'),
+            ('Adobe', 'Research Scientist Intern', 'College Park, MD', 'May 2026', 'Aug 2026',
+             'Building a multi-agent system that turns any uploaded document into an interactive webpage, '
+             'and an optimization pipeline that autonomously improves multi-agent systems — tuning their '
+             'context, topology, harness, cost, and latency.'),
+            ('Etsy', 'AI Research Intern', 'Brooklyn, NY', 'May 2025', 'Aug 2025',
+             'Designed an agentic framework for e-commerce query rewriting via a genetic algorithm (OptAgent), '
+             'using a multi-agent shopper simulation for offline semantic evaluation — a 3.28% gain over '
+             'test-time baselines. Scaled data collection and analysis over large query logs with BigQuery.'),
+            ('Arizona State University', 'Research Assistant', 'Tempe, AZ', 'Jan 2024', 'Present',
+             'Built an LLM system translating decompiler output into high-level source code for reverse '
+             'engineering; fine-tuned with SFT + RL (GRPO) and a graph-edit-distance reward for structural '
+             'fidelity, achieving a 2.75× improvement on held-out repositories.'),
             ('Arizona State University', 'Graduate Teaching Assistant', 'Tempe, AZ', 'Aug 2022', 'May 2023',
              'Teaching assistant for graduate machine-learning coursework.'),
             ('Nagarro', 'Associate Engineer', 'Gurugram, India', 'Oct 2020', 'Apr 2021',
